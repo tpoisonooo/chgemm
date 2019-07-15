@@ -1,5 +1,5 @@
-OLD  := MMult_4x16_19
-NEW  := MMult_4x16_19
+OLD  := MMult_4x8_21
+NEW  := MMult_4x8_21
 
 #
 # sample makefile
@@ -7,9 +7,9 @@ NEW  := MMult_4x16_19
 
 CC         := gcc
 LINKER     := $(CC)
-#CFLAGS     := -O0 -g -Wall
-CFLAGS     := -O2 -Wall
-LDFLAGS    := -lm
+CFLAGS     := -O0 -g -Wall
+#CFLAGS     := -O3 -g -Wall 
+#LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
               compare_matrices.o \
@@ -17,7 +17,11 @@ UTIL       := copy_matrix.o \
               dclock.o \
               REF_MMult.o \
               print_matrix.o \
-              kernel_m4n4k16.o
+              kernel_m4n4k16.o \
+              reorder.o \
+              int8kernel_m4.o \
+              int8kernel_m2.o \
+              int8kernel_m1.o
 
 TEST_OBJS  := test_MMult.o $(NEW).o 
 

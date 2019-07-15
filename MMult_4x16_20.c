@@ -20,7 +20,6 @@
 #undef DEBUG_PRINT_C
 #undef DEBUG_PRINT_DATA
 
-
 /* Create macros so that the matrices are stored in row-major order */
 
 #define A(i,j) a[ (i)*lda + (j) ]
@@ -35,9 +34,9 @@ Target: 24gflops on RK3399
 //#define GEMM_N (384)  // GEMM_R
 //#define GEMM_M (4096)  // GEMM_P
 //#define GEMM_K (256)  // GEMM_Q
-#define GEMM_N (384)  // GEMM_R
+#define GEMM_N (768)  // GEMM_R
 #define GEMM_M (4096)  // GEMM_P
-#define GEMM_K (256)  // GEMM_Q
+#define GEMM_K (512)  // GEMM_Q
 #define GEMM_UNROLL_K (16)
 #define GEMM_UNROLL_M (4)
 #define GEMM_UNROLL_N (4)
@@ -249,7 +248,7 @@ void kernel_sub_v1(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int
 extern void kernel_sub_m4n4k16(int8_t *sa, int8_t *sb, int32_t *sc, int ldc, int repeat);
 
 static void kernel_sub_v2(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
-    if (4 == m && 4 == n && k==16) {
+    if (4 == m && 4 == n && 16 == k) {
         kernel_sub_m4n4k16(sa, sb, sc, ldc * sizeof(ldc), 1);
         return;
     }
@@ -260,7 +259,6 @@ static void kernel_sub_v2(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *
         int8_t *b = sb; 
 
         for (int j = 0; j < n; ++j) {
-            
             for (int x = 0; x < k; ++x) {
                 c[j] += (int32_t)(a[x]) * b[x];
             }
@@ -271,6 +269,29 @@ static void kernel_sub_v2(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *
     } 
 }
 
+static void kernel_m4n4(int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
+    //sum_all( A4xsubk * Bsubkx4 )
+    int8_t *a = sa, *b = sb;
+    int shift = 4;
+    while (k > 0) {
+        int repeat = k >> shift;
+        int step = 1 << shift;
+        if (step==16 && repeat > 0) {
+            kernel_sub_m4n4k16(sa, sb, sc, ldc * sizeof(ldc), repeat);
+            a += repeat << (2 + shift);
+            b += repeat << (2 + shift);
+        } else {
+            for (int i = 0; i < repeat; ++i) {
+                kernel_sub_v2(4, 4, step, a, b, sc, ldc);
+                a += 4 * step;
+                b += 4 * step; 
+            }
+        }
+        k -= (repeat << shift);
+        shift--;
+    }
+}
+
 // get c[m, n] output
 static void kernel_mn(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
     //sum_all( A4xsubk * Bsubkx4 )
@@ -279,10 +300,16 @@ static void kernel_mn(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, 
     while (k > 0) {
         int repeat = k >> shift;
         int step = 1 << shift;
-        for (int i = 0; i < repeat; ++i) {
-            kernel_sub_v2(m, n, step, a, b, sc, ldc);
-            a += m * step;
-            b += n * step; 
+        if (4 == m && 4 == n && step==16 && repeat > 0) {
+            kernel_sub_m4n4k16(sa, sb, sc, ldc * sizeof(ldc), repeat);
+            a += repeat << (2 + shift);
+            b += repeat << (2 + shift);
+        } else {
+            for (int i = 0; i < repeat; ++i) {
+                kernel_sub_v2(m, n, step, a, b, sc, ldc);
+                a += m * step;
+                b += n * step; 
+            }
         }
         k -= (repeat << shift);
         shift--;
@@ -290,7 +317,7 @@ static void kernel_mn(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, 
 }
 
 // proc m lines
-void kernel_m(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
+static void kernel_m(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
     // m == 4
     int nn = n;
     int8_t *b = sb;
@@ -318,13 +345,41 @@ void kernel_m(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc)
     }
 }
 
+static void kernel_m4(int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
+    // m == 4
+    int nn = n;
+    int8_t *b = sb;
+    int32_t *c = sc;
+
+    while(nn >= 4) {
+        kernel_m4n4(k, sa, b, c, ldc);
+        b += 4 * k;
+        c += 4;        
+        nn -= 4;
+    };
+
+    if(nn >= 2) {
+        kernel_mn(4, 2, k, sa, b, c, ldc);
+        b += 2 * k;
+        c += 2;        
+        nn -= 2;
+    }
+
+    if(nn >= 1) {
+        kernel_mn(4, 1, k, sa, b, c, ldc);
+        b += 1 * k;
+        c += 1;
+        nn -= 1;
+    }
+}
+
 void kernel_4x16(int m, int n, int k,
         int8_t* sa, int8_t* sb, int32_t* sc, int ldc){
     int mm = m;
     int8_t *a = sa;
     int32_t *c = sc;
     while(mm >= 4){
-        kernel_m(4, n, k, a, sb, c, ldc);
+        kernel_m4(n, k, a, sb, c, ldc);
         a += 4 * k;
         c += 4 * ldc;
         mm -= 4;

@@ -106,13 +106,14 @@ int main(int argc, char** argv)
     }
 
     diff = compare_matrices( m, n, c, ldc, cref, ldc );
+//    diff = 0;
     if(diff != 0){
         exit(0);
     }
 
     printf( "%d %0.3lf %d \n", p, gflops / dtime_best, diff );
     double sum = packZ + packN + kernel;
-    printf( "timecost: %0.2f %0.2lf %0.2lf \n", packZ/sum, packN/sum, kernel/sum);
+    printf( "packZ: %0.2f, packN: %0.2lf, kernel: %0.2lf, sum: %0.2lf \n", packZ, packN, kernel, sum);
     fflush( stdout );
 
     free( a );
@@ -124,6 +125,6 @@ int main(int argc, char** argv)
 
   printf( "];\n" );
 
-  exit( 0 );
+//  exit( 0 );
 }
 
