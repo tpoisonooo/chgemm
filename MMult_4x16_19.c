@@ -20,6 +20,7 @@
 #undef DEBUG_PRINT_C
 #undef DEBUG_PRINT_DATA
 
+
 /* Create macros so that the matrices are stored in row-major order */
 
 #define A(i,j) a[ (i)*lda + (j) ]
@@ -67,6 +68,7 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
                                    double *packN_cost,
                                    double *kernel_cost)
 {
+    *packN_cost = *packZ_cost = *kernel_cost = 0.0;
 #if (defined DEBUG_PRINT_A) || (defined DEBUG_PRINT_B || defined DEBUG_PRINT_C)
     printf("\n--- a ----\n");
     print_int8_matrix(m, k, a, lda);
@@ -106,9 +108,13 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
                 l1stride = 1;
             }
 
+#ifdef DEBUG_CLOCK
             temp = dclock();
+#endif
             packN_16(min_k, min_n, b + ks * ldb, ldb, sb);
+#ifdef DEBUG_CLOCK
             (*packN_cost) += (dclock() - temp);
+#endif
 
 #ifdef DEBUG_PRINT_B
             printf("\n ----- sb -- k n offset -- %d %d %d \n", min_k, min_n, ks * ldb);
@@ -127,18 +133,26 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
                 }
 
                 // coninueous packA
+#ifdef DEBUG_CLOCK
                 temp = dclock();
+#endif
                 packZ_16(min_mm, min_k, a + mms * lda + ks, lda, sa + min_k * (mms - ms) * l1stride);
+#ifdef DEBUG_CLOCK
                 (*packZ_cost) += (dclock() - temp);
+#endif
 
 #ifdef DEBUG_PRINT_A
                 printf("\n ----- sa --m k  %d %d-- \n", mms - ms, min_k);
                 print_int8_matrix(m, k, sa, lda);
 #endif
 
+#ifdef DEBUG_CLOCK
                 temp = dclock();
+#endif
                 KERNEL_4x16(min_mm, min_n, min_k, sa + l1stride * min_k * (mms - ms), sb, c + mms * ldc, ldc);
+#ifdef DEBUG_CLOCK
                 (*kernel_cost) += (dclock() - temp);
+#endif
 
 #ifdef DEBUG_PRINT_C
                 printf("\n---first kernel----\n");
@@ -155,9 +169,13 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
                     min_n = (min_n / 2 + GEMM_UNROLL_N - 1) & ~(GEMM_UNROLL_N - 1);
                 }
 
+#ifdef DEBUG_CLOCK
                 temp = dclock();
+#endif
                 packN_16(min_k, min_n, b + ns + ldb * ks, ldb, sb);
+#ifdef DEBUG_CLOCK
                 (*packN_cost) += (dclock() - temp);
+#endif
 
 #ifdef DEBUG_PRINT_B
                 printf("\n ----- sb -- k n offset -- %d %d %d\n", min_k, min_n, ks * ldb + ns);
@@ -228,11 +246,11 @@ void kernel_sub_v1(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int
     } 
 }
 
-extern void kernel_sub_m4n4k16(int8_t *sa, int8_t *sb, int32_t *sc, int ldc);
+extern void kernel_sub_m4n4k16(int8_t *sa, int8_t *sb, int32_t *sc, int ldc, int repeat);
 
 static void kernel_sub_v2(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc) {
     if (4 == m && 4 == n && k==16) {
-        kernel_sub_m4n4k16(sa, sb, sc, ldc * sizeof(ldc));
+        kernel_sub_m4n4k16(sa, sb, sc, ldc * sizeof(ldc), 1);
         return;
     }
 
@@ -285,14 +303,14 @@ void kernel_m(int m, int n, int k, int8_t *sa, int8_t *sb, int32_t *sc, int ldc)
         nn -= 4;
     };
 
-    while(nn >= 2) {
+    if(nn >= 2) {
         kernel_mn(m, 2, k, sa, b, c, ldc);
         b += 2 * k;
         c += 2;        
         nn -= 2;
-    };
+    }
 
-    while(nn >= 1) {
+    if(nn >= 1) {
         kernel_mn(m, 1, k, sa, b, c, ldc);
         b += 1 * k;
         c += 1;
@@ -312,19 +330,19 @@ void kernel_4x16(int m, int n, int k,
         mm -= 4;
     };
 
-    while(mm >= 2){
+    if(mm >= 2){
         kernel_m(2, n, k, a, sb, c, ldc);
         a += 2 * k;
         c += 2 * ldc;
         mm -= 2;
-    };
+    }
 
-    while(mm >= 1){
+    if(mm >= 1){
         kernel_m(1, n, k, a, sb, c, ldc);
         a += k;
         c += ldc;
         mm--;
-    };
+    }
 }
 
 static void packZ_sub(int8_t *from, int lda, int8_t * restrict to, int m, int n, int repeat) {

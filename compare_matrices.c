@@ -29,5 +29,6 @@ int32_t compare_matrices( int m, int n, int32_t *a, int lda, int32_t *b, int ldb
   }
 
   return max_diff;
+//  return 0;
 }
 

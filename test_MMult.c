@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 
     printf( "%d %0.3lf %d \n", p, gflops / dtime_best, diff );
     double sum = packZ + packN + kernel;
-    printf( "timecost: %0.2f %0.2lf %0.2lf \n", packZ/sum, packN/sum, kernel/sum);
+    printf( "packZ: %0.2f, packN: %0.2lf, kernel: %0.2lf, sum: %0.2lf \n", packZ, packN, kernel, sum);
     fflush( stdout );
 
     free( a );

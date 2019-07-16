@@ -1,5 +1,5 @@
 OLD  := MMult_4x16_19
-NEW  := MMult_4x16_19
+NEW  := MMult_4x16_20
 
 #
 # sample makefile
@@ -7,7 +7,7 @@ NEW  := MMult_4x16_19
 
 CC         := gcc
 LINKER     := $(CC)
-#CFLAGS     := -O0 -g -Wall
+#CFLAGS     := -O0 -g -Wall -pg
 CFLAGS     := -O2 -Wall
 LDFLAGS    := -lm
 
