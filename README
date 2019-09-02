@@ -1,2 +1,0 @@
-chgemm is a int8 gemm project.
-Just like gemmlowp Nonlocal, input value cannot be -128.
