@@ -106,6 +106,7 @@ int main(int argc, char** argv)
     }
 
     diff = compare_matrices( m, n, c, ldc, cref, ldc );
+//    diff = 0;
     if(diff != 0){
         exit(0);
     }
@@ -124,6 +125,6 @@ int main(int argc, char** argv)
 
   printf( "];\n" );
 
-  exit( 0 );
+//  exit( 0 );
 }
 

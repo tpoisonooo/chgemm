@@ -34,9 +34,9 @@ Target: 24gflops on RK3399
 //#define GEMM_N (384)  // GEMM_R
 //#define GEMM_M (4096)  // GEMM_P
 //#define GEMM_K (256)  // GEMM_Q
-#define GEMM_N (384)  // GEMM_R
+#define GEMM_N (768)  // GEMM_R
 #define GEMM_M (4096)  // GEMM_P
-#define GEMM_K (256)  // GEMM_Q
+#define GEMM_K (512)  // GEMM_Q
 #define GEMM_UNROLL_K (16)
 #define GEMM_UNROLL_M (4)
 #define GEMM_UNROLL_N (4)
