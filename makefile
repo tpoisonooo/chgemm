@@ -21,7 +21,10 @@ UTIL       := copy_matrix.o \
               test.o \
               int8gemm.o \
               reorder.o \
-              int8kernel.o \
+              int8kernel_m4.o \
+              int8kernel_m3.o \
+              int8kernel_m2.o \
+              int8kernel_m1.o
 
 TEST_OBJS  := test_MMult.o $(NEW).o 
 

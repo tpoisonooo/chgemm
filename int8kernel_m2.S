@@ -1,5 +1,14 @@
+//
+//  MNNGemmUint8to32_8x4_Unit.S
+//  MNN
+//
+//  Created by MNN on 2018/11/26.
+//  Copyright © 2018, Alibaba Group Holding Limited
+//
+
 #ifdef __aarch64__
 
+#include "MNNAsmGlobal.h"
 #define dst x0
 #define dst_ptr_0 x9
 #define dst_ptr_1 x10
@@ -9,10 +18,9 @@
 #define tmp_ptr_b x14
 .text
 .align 5
-.global int8kernel
 
-int8kernel:
-//void int8kernel(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
+asm_function MNNGemmint8to32_2_127_Unit
+//void MNNGemmint8to32_8x4_Unit(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
 //Auto: x0: dst, x1: src, x2:weight, x3: src_depth_quad
 // x4: dst_depth_quad
 
@@ -40,12 +48,9 @@ sub sp, sp, #128
 st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
 st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
 
-
 lsl x8, x4, #4
 mov dst_ptr_0, dst
 add dst_ptr_1, dst_ptr_0, x8
-add dst_ptr_2, dst_ptr_1, x8
-add dst_ptr_3, dst_ptr_2, x8
 
 L6LoopDz:
 INIT
@@ -77,24 +82,7 @@ INIT
     smull v0.8h, v7.8b, v2.8b
     smull v1.8h, v7.8b, v3.8b
     saddlp v11.4s, v0.8h
-    ld1 {v2.8b, v3.8b}, [x1], #16
     saddlp v15.4s, v1.8h
-    smull v0.8h, v4.8b, v2.8b
-    smull v1.8h, v4.8b, v3.8b
-    saddlp v16.4s, v0.8h
-    saddlp v20.4s, v1.8h
-    smull v0.8h, v5.8b, v2.8b
-    smull v1.8h, v5.8b, v3.8b
-    saddlp v17.4s, v0.8h
-    saddlp v21.4s, v1.8h
-    smull v0.8h, v6.8b, v2.8b
-    smull v1.8h, v6.8b, v3.8b
-    saddlp v18.4s, v0.8h
-    saddlp v22.4s, v1.8h
-    smull v0.8h, v7.8b, v2.8b
-    smull v1.8h, v7.8b, v3.8b
-    saddlp v19.4s, v0.8h
-    saddlp v23.4s, v1.8h
 
     cmp x7, #0
     beq L6LoopSzEnd
@@ -102,7 +90,7 @@ INIT
     .L6LoopSzBegin:
     L6LoopSz:
         add tmp_ptr_b, x2, #32 
-        add tmp_ptr_a, x1, #32
+        add tmp_ptr_a, x1, #16
         ld1 {v4.8b, v5.8b}, [x2], #16
         ld1 {v2.8b, v3.8b}, [x1], #16
 
@@ -125,23 +113,6 @@ INIT
         sadalp v12.4s, v0.8h
         sadalp v13.4s, v1.8h
 
-        // finish v8v9 v12v13, start proc v16v17,v20v21
-        ld1 {v28.8b, v29.8b}, [x1], #16
-        smull v0.8h, v4.8b, v28.8b
-        smull v1.8h, v5.8b, v28.8b
-        ld1 {v26.8b, v27.8b}, [tmp_ptr_a], #16
-        smlal v0.8h, v6.8b, v26.8b
-        smlal v1.8h, v7.8b, v26.8b
-        sadalp v16.4s, v0.8h
-        sadalp v17.4s, v1.8h
-
-        smull v0.8h, v4.8b, v29.8b
-        smull v1.8h, v5.8b, v29.8b
-        smlal v0.8h, v6.8b, v27.8b
-        smlal v1.8h, v7.8b, v27.8b
-        sadalp v20.4s, v0.8h
-        sadalp v21.4s, v1.8h
-
         // start v10v11, v14v15, v18v19, v22v23, error here!
         ld1 {v4.8b, v5.8b}, [x2], #16
         smull v0.8h, v4.8b, v2.8b
@@ -159,21 +130,7 @@ INIT
         sadalp v14.4s, v0.8h
         sadalp v15.4s, v1.8h
 
-        smull v0.8h, v4.8b, v28.8b
-        smull v1.8h, v5.8b, v28.8b
-        smlal v0.8h, v6.8b, v26.8b
-        smlal v1.8h, v7.8b, v26.8b
-        sadalp v18.4s, v0.8h
-        sadalp v19.4s, v1.8h
-
-        smull v0.8h, v4.8b, v29.8b
-        smull v1.8h, v5.8b, v29.8b
-        smlal v0.8h, v6.8b, v27.8b
-        smlal v1.8h, v7.8b, v27.8b
-        sadalp v22.4s, v0.8h
-        sadalp v23.4s, v1.8h
-
-        add x1, x1, #32
+        add x1, x1, #16
         add x2, x2, #32
         subs x7, x7, #2
         bne L6LoopSz
@@ -183,20 +140,12 @@ INIT
     addp v10.4s, v10.4s, v11.4s
     addp v12.4s, v12.4s, v13.4s
     addp v14.4s, v14.4s, v15.4s
-    addp v16.4s, v16.4s, v17.4s
-    addp v18.4s, v18.4s, v19.4s
-    addp v20.4s, v20.4s, v21.4s
-    addp v22.4s, v22.4s, v23.4s
 
     addp v8.4s, v8.4s, v10.4s
     addp v9.4s, v12.4s, v14.4s
-    addp v10.4s, v16.4s, v18.4s
-    addp v11.4s, v20.4s, v22.4s
 
     st1 {v8.4s}, [dst_ptr_0], #16
     st1 {v9.4s}, [dst_ptr_1], #16
-    st1 {v10.4s}, [dst_ptr_2], #16
-    st1 {v11.4s}, [dst_ptr_3], #16
 
     subs x4, x4, #1
     mov x1, x6

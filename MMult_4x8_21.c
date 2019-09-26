@@ -99,7 +99,7 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
     trans_w(b, sb, k, n);
     // subkernel 
     for(int i = 0; i < m / 4; i++){
-    	int8kernel(c + i * 4 * n, sa + i * 4 * k, sb, k/8, n/4);
+    	int8kernel(c + i * 4 * n, sa + i * 4 * k, sb, 8, 4);
     }
     // print_int32_matrix(m, n, c, ldc);
 
