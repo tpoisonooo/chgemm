@@ -21,6 +21,8 @@
 #define nd1_ori     x22
 #define nd          x23
 
+#define temp        x24
+
 .text
 .align 5
 .global int8kernel_m4
@@ -95,12 +97,14 @@ add dst_ptr_3, dst_ptr_2, x8
 DECOMPOSE_K
 DECOMPOSE_N
 
+cmp nd4_ori, #0
+beq nd2_start // means n < 4 
 loopnd4:
     INIT
     mov src_ori, x1  // PanelA
     mov kd, kd8_ori
     
-    cmp is_kd8_even, 0 
+    cmp is_kd8_even, #0 
     beq loopkd8_nd4_even // loop number is even 
 
     // start loopkd8_nd4
@@ -367,6 +371,362 @@ loopnd4:
         mov x1, src_ori 
         bne loopnd4 
 
+
+nd2_start:
+    cmp nd2_ori, 0  // means n < 2
+    beq nd1_start
+
+    INIT
+    mov src_ori, x1  // PanelA
+    mov kd, kd8_ori
+    
+    cmp is_kd8_even, 0 
+    beq loopkd8_nd2_even // loop number is even 
+
+    // start loopkd8_nd4
+    subs kd, kd, #1
+    ld1 {v4.8b, v5.8b}, [x2], #16  // load four lines of B
+    ld1 {v2.8b, v3.8b}, [x1], #16  // load two lines of PanelA
+    smull v0.8h, v4.8b, v2.8b
+    smull v1.8h, v4.8b, v3.8b
+    saddlp v8.4s, v0.8h
+    saddlp v12.4s, v1.8h
+    smull v0.8h, v5.8b, v2.8b
+    smull v1.8h, v5.8b, v3.8b
+    saddlp v9.4s, v0.8h
+    saddlp v13.4s, v1.8h
+
+    ld1 {v2.8b, v3.8b}, [x1], #16
+    smull v0.8h, v4.8b, v2.8b
+    smull v1.8h, v4.8b, v3.8b
+    saddlp v16.4s, v0.8h
+    saddlp v20.4s, v1.8h
+    smull v0.8h, v5.8b, v2.8b
+    smull v1.8h, v5.8b, v3.8b
+    saddlp v17.4s, v0.8h
+    saddlp v21.4s, v1.8h
+
+    cmp kd, #0
+    beq loopkd8_nd2_end 
+
+    loopkd8_nd2_even:
+        add tmp_ptr_b, x2, #16
+        add tmp_ptr_a, x1, #32
+        ld1 {v4.8b, v5.8b}, [x2], #16
+        ld1 {v2.8b, v3.8b}, [x1], #16
+
+        smull v0.8h, v4.8b, v2.8b
+        ld1 {v6.8b, v7.8b}, [tmp_ptr_b], #16
+        smull v1.8h, v5.8b, v2.8b
+        ld1 {v24.8b, v25.8b}, [tmp_ptr_a], #16
+
+        smlal v0.8h, v6.8b, v24.8b
+        smlal v1.8h, v7.8b, v24.8b
+
+        sadalp v8.4s, v0.8h
+        sadalp v9.4s, v1.8h
+    
+        smull v0.8h, v4.8b, v3.8b
+        smull v1.8h, v5.8b, v3.8b
+        smlal v0.8h, v6.8b, v25.8b
+        smlal v1.8h, v7.8b, v25.8b
+
+        sadalp v12.4s, v0.8h
+        sadalp v13.4s, v1.8h
+
+        // finish v8v9 v12v13, start proc v16v17,v20v21
+        ld1 {v28.8b, v29.8b}, [x1], #16
+        smull v0.8h, v4.8b, v28.8b
+        smull v1.8h, v5.8b, v28.8b
+        ld1 {v26.8b, v27.8b}, [tmp_ptr_a], #16
+        smlal v0.8h, v6.8b, v26.8b
+        smlal v1.8h, v7.8b, v26.8b
+        sadalp v16.4s, v0.8h
+        sadalp v17.4s, v1.8h
+
+        smull v0.8h, v4.8b, v29.8b
+        smull v1.8h, v5.8b, v29.8b
+        smlal v0.8h, v6.8b, v27.8b
+        smlal v1.8h, v7.8b, v27.8b
+        sadalp v20.4s, v0.8h
+        sadalp v21.4s, v1.8h
+
+        add x1, x1, #32
+        add x2, x2, #16
+        subs kd, kd, #2
+        bne loopkd8_nd2_even
+
+    loopkd8_nd2_end:
+        addp v8.4s, v8.4s, v9.4s
+        addp v12.4s, v12.4s, v13.4s
+        addp v16.4s, v16.4s, v17.4s
+        addp v20.4s, v20.4s, v21.4s
+
+        addp v8.4s, v8.4s, v8.4s
+        addp v12.4s, v12.4s, v12.4s
+        addp v16.4s, v16.4s, v16.4s
+        addp v20.4s, v20.4s, v20.4s
+
+        // start process kd4 kd2 kd1 cases
+        // TODO
+        cmp kd4_ori, 0
+        beq loopkd2_nd2 
+            // start subkernel_m4n2k4
+            ld1 {v4.8b}, [x2], #8  // load B4x2
+            sxtl v4.8h, v4.8b
+            mov v6.d[0], v4.d[1]
+
+            ld1 {v2.8b}, [x1], #8  // load first A2x4
+            sxtl v2.8h, v2.8b
+            mov v3.d[0], v2.d[1]
+
+            smull v9.4s, v2.4h, v4.4h
+            smull v10.4s, v2.4h, v6.4h
+
+            addp v9.4s, v9.4s, v10.4s
+            addp v9.4s, v9.4s, v9.4s
+            add v8.4s, v8.4s, v9.4s
+
+            smull v13.4s, v3.4h, v4.4h
+            smull v14.4s, v3.4h, v6.4h
+
+            addp v13.4s, v13.4s, v14.4s
+            addp v13.4s, v13.4s, v13.4s
+            add v12.4s, v12.4s, v13.4s
+
+            ld1 {v2.8b}, [x1], #8 // load next A2x4
+            sxtl v2.8h, v2.8b
+            mov v3.d[0], v2.d[1]
+
+            smull v17.4s, v2.4h, v4.4h
+            smull v18.4s, v2.4h, v6.4h
+
+            addp v17.4s, v17.4s, v18.4s
+            addp v17.4s, v17.4s, v17.4s
+            add v16.4s, v16.4s, v17.4s
+
+            smull v21.4s, v3.4h, v4.4h
+            smull v22.4s, v3.4h, v6.4h
+
+            addp v21.4s, v21.4s, v22.4s
+            addp v21.4s, v21.4s, v21.4s
+            add v20.4s, v20.4s, v21.4s
+
+        loopkd2_nd2:
+            cmp kd2_ori, 0
+            beq loopkd1_nd2 
+            // start subkernel_m4n2k2
+            ld1 {v4.8b}, [x1], #8   // load A4x2
+            ld1 {v0.8b}, [x2]   // load B2x2
+            add x2, x2, #4
+                                // 00 11 22 33
+            rev32 v1.4h, v0.4h  // 11 00 33 22
+            rev64 v2.2s, v0.2s  // 22 33 00 11
+            rev64 v3.4h, v0.4h  // 33 22 11 00
+
+            smull v21.8h, v4.8b, v0.8b
+            smull v22.8h, v4.8b, v1.8b
+            smull v23.8h, v4.8b, v2.8b
+            smull v24.8h, v4.8b, v3.8b
+
+            saddlp v21.4s, v21.8h
+            saddlp v22.4s, v22.8h
+            saddlp v23.4s, v23.8h
+            saddlp v24.4s, v24.8h
+
+            mov v9.s[0], v21.s[0]
+            mov v9.s[1], v22.s[0]
+            add v8.4s, v8.4s, v9.4s
+
+            mov v13.s[0], v22.s[1]
+            mov v13.s[1], v21.s[1]
+            add v12.4s, v12.4s, v13.4s
+
+            mov v17.s[0], v23.s[2]
+            mov v17.s[1], v24.s[2]
+            add v16.4s, v16.4s, v17.4s
+
+            mov v21.s[0], v24.s[3]
+            mov v21.s[1], v23.s[3]
+            add v20.4s, v20.4s, v21.4s
+
+        loopkd1_nd2:
+            cmp kd1_ori, 0 
+            beq loopnd4_end
+            // start subkernel_m4n2k1
+            ld1 {v4.8b}, [x2]   // load B1x2
+            add x2, x2, #2
+            ld1 {v2.8b}, [x1]   // load A4x1
+            add x1, x1, #4
+            sxtl v4.8h, v4.8b
+            sxtl v2.8h, v2.8b
+            smlal v8.4s, v4.4h, v2.h[0]
+            smlal v9.4s, v4.4h, v2.h[1]
+            smlal v10.4s, v4.4h, v2.h[2]
+            smlal v11.4s, v4.4h, v2.h[3]
+
+    loopnd2_end:
+        st1 {v8.2s}, [dst_ptr_0], #8
+        st1 {v12.2s}, [dst_ptr_1], #8
+        st1 {v16.2s}, [dst_ptr_2], #8
+        st1 {v20.2s}, [dst_ptr_3], #8
+
+nd1_start:
+    cmp nd1_ori, 0  // means left n == 0
+    beq finish
+
+    INIT
+    mov src_ori, x1  // PanelA
+    mov kd, kd8_ori
+    
+    cmp is_kd8_even, 0 
+    beq loopkd8_nd2_even // loop number is even 
+
+    // start loopkd8_nd4
+    subs kd, kd, #1
+    ld1 {v4.8b}, [x2], #8  // load four lines of B
+    ld1 {v2.8b, v3.8b}, [x1], #16  // load two lines of PanelA
+    smull v0.8h, v4.8b, v2.8b
+    smull v1.8h, v4.8b, v3.8b
+    saddlp v8.4s, v0.8h
+    saddlp v12.4s, v1.8h
+
+    ld1 {v2.8b, v3.8b}, [x1], #16
+    smull v0.8h, v4.8b, v2.8b
+    smull v1.8h, v4.8b, v3.8b
+    saddlp v16.4s, v0.8h
+    saddlp v20.4s, v1.8h
+
+    cmp kd, #0
+    beq loopkd8_nd1_end 
+
+    loopkd8_nd1_even:
+        ld1 {v4.8b, v5.8b}, [x2], #16
+        ld1 {v24.8b, v25.8b, v26.8b, v27.8b}, [x1], #32
+        ld1 {v28.8b, v29.8b, v30.8b, v31.8b}, [x1], #32
+        
+        smull v0.8h, v24.8b, v4.8b
+        smlal v0.8h, v28.8b, v5.8b
+        sadalp v8.4s, v0.8h
+
+        smull v1.8h, v25.8b, v4.8b
+        smlal v1.8h, v29.8b, v5.8b
+        sadalp v12.4s, v1.8h
+        
+        smull v0.8h, v26.8b, v4.8b
+        smlal v0.8h, v30.8b, v5.8b
+        sadalp v16.4s, v0.8h
+
+        smull v1.8h, v27.8b, v4.8b
+        smlal v1.8h, v31.8b, v5.8b
+        sadalp v20.4s, v1.8h
+
+        subs kd, kd, #2
+        bne loopkd8_nd1_even
+
+    loopkd8_nd1_end:
+        addp v8.4s, v8.4s, v8.4s
+        addp v8.4s, v8.4s, v8.4s
+        addp v12.4s, v12.4s, v12.4s
+        addp v12.4s, v12.4s, v12.4s
+        addp v16.4s, v16.4s, v16.4s
+        addp v16.4s, v16.4s, v16.4s
+        addp v20.4s, v20.4s, v20.4s
+        addp v20.4s, v20.4s, v20.4s
+
+        // start process kd4 kd2 kd1 cases
+        cmp kd4_ori, 0
+        beq loopkd2_nd1 
+            // start subkernel_m4n1k2
+            ld1 {v4.8b}, [x2]  // load B4x1
+            add x2, x2, #4
+            sxtl v4.8h, v4.8b   // extend B4x1 to v4
+
+            ld1 {v2.8b, v3.8b}, [x1], #16  // load A4x4
+            sxtl v2.8h, v2.8b
+            mov v5.d[0], v2.d[1]
+            sxtl v3.8h, v3.8b
+            mov v6.d[0], v3.d[1]  // extend A4x4 to v2,v5,v3,v6
+
+            smull v9.4s, v2.4h, v4.4h
+            addp v9.4s, v9.4s, v9.4s
+            addp v9.4s, v9.4s, v9.4s
+            add v8.4s, v8.4s, v9.4s
+
+            smull v13.4s, v5.4h, v4.4h
+            addp v13.4s, v13.4s, v13.4s
+            addp v13.4s, v13.4s, v13.4s
+            add v12.4s, v12.4s, v13.4s
+
+            smull v17.4s, v3.4h, v4.4h
+            addp v17.4s, v17.4s, v17.4s
+            addp v17.4s, v17.4s, v17.4s
+            add v16.4s, v16.4s, v17.4s
+
+            smull v21.4s, v6.4h, v4.4h
+            addp v21.4s, v21.4s, v21.4s
+            addp v21.4s, v21.4s, v21.4s
+            add v20.4s, v20.4s, v21.4s
+
+        loopkd2_nd1:
+            cmp kd2_ori, 0
+            beq loopkd1_nd1
+            // start subkernel_m4n1k2
+            ld1 {v4.8b}, [x1], #8   // load A4x2
+            ld1 {v0.8b}, [x2]   // load B2x1
+            add x2, x2, #2
+                                // 00
+            rev32 v1.4h, v0.4h  //    00
+            rev64 v2.2s, v0.2s  //       00 
+            rev64 v3.4h, v0.4h  //          00
+
+            smull v21.8h, v4.8b, v0.8b
+            smull v22.8h, v4.8b, v1.8b
+            smull v23.8h, v4.8b, v2.8b
+            smull v24.8h, v4.8b, v3.8b
+
+            saddlp v21.4s, v21.8h
+            saddlp v22.4s, v22.8h
+            saddlp v23.4s, v23.8h
+            saddlp v24.4s, v24.8h
+
+            add v8.4s, v8.4s, v21.4s
+            mov v13.s[0], v22.s[1]
+            add v12.4s, v12.4s, v13.4s
+            mov v17.s[0], v23.s[1]
+            add v16.4s, v16.4s, v17.4s
+            mov v21.s[0], v24.s[3]
+            add v20.4s, v20.4s, v21.4s
+
+        loopkd1_nd1:
+            cmp kd1_ori, 0 
+            beq loopnd1_end
+            // start subkernel_m4n1k1
+            ld1 {v4.8b}, [x2]   // load B1x1
+            add x2, x2, #1
+            ld1 {v2.8b}, [x1]   // load A4x1
+            add x1, x1, #4
+            sxtl v4.8h, v4.8b
+            sxtl v2.8h, v2.8b
+
+            smull v0.4s, v2.4h, v4.h[0]
+
+            add v8.4s, v8.4s, v0.4s
+            mov v13.s[0], v0.s[1]
+            add v12.4s, v12.4s, v13.4s
+            mov v17.s[0], v0.s[2]
+            add v16.4s, v16.4s, v17.4s
+            mov v21.s[0], v0.s[3]
+            add v20.4s, v20.4s, v21.4s
+
+    loopnd1_end:
+        // no need to add the last output pointer
+        st1 {v8.s}[0], [dst_ptr_0]
+        st1 {v12.s}[0], [dst_ptr_1]
+        st1 {v16.s}[0], [dst_ptr_2]
+        st1 {v20.s}[0], [dst_ptr_3]
+
+finish:
 sub sp, sp, #128
 ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
 ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
