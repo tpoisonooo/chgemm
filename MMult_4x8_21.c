@@ -36,7 +36,7 @@ void print_int8_matrix( int m, int n, int8_t *a, int lda);
 void print_int32_matrix( int m, int n, int32_t *a, int lda);
 /* Routine for computing C = A * B + C */
 
-extern void int8kernel(int32_t* dst, const int8_t* src, const int8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
+extern void int8kernel_m4(int32_t* dst, const int8_t* src, const int8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
 extern void reorder(int8_t * src, int8_t * dst, size_t m, size_t k);
 
 static inline void trans(int8_t * matrixB, int8_t * matrixB_trans, int k , int n){
@@ -99,7 +99,7 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
     trans_w(b, sb, k, n);
     // subkernel 
     for(int i = 0; i < m / 4; i++){
-    	int8kernel(c + i * 4 * n, sa + i * 4 * k, sb, 8, 4);
+    	int8kernel_m4(c + i * 4 * n, sa + i * 4 * k, sb, k, n);
     }
     // print_int32_matrix(m, n, c, ldc);
 

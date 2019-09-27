@@ -1,14 +1,5 @@
-//
-//  MNNGemmUint8to32_8x4_Unit.S
-//  MNN
-//
-//  Created by MNN on 2018/11/26.
-//  Copyright © 2018, Alibaba Group Holding Limited
-//
-
 #ifdef __aarch64__
 
-#include "MNNAsmGlobal.h"
 #define dst x0
 #define dst_ptr_0 x9
 #define dst_ptr_1 x10
@@ -18,9 +9,10 @@
 #define tmp_ptr_b x14
 .text
 .align 5
+.global int8kernel_m1
 
-asm_function MNNGemmint8to32_1_127_Unit
-//void MNNGemmint8to32_8x4_Unit(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
+int8kernel_m1:
+//void int8kernel_m1(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t k, size_t n);
 //Auto: x0: dst, x1: src, x2:weight, x3: src_depth_quad
 // x4: dst_depth_quad
 

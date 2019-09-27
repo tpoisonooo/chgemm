@@ -18,11 +18,8 @@ UTIL       := copy_matrix.o \
               REF_MMult.o \
               print_matrix.o \
               kernel_m4n4k16.o \
-              test.o \
-              int8gemm.o \
               reorder.o \
               int8kernel_m4.o \
-              int8kernel_m3.o \
               int8kernel_m2.o \
               int8kernel_m1.o
 

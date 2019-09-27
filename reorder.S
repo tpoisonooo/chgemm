@@ -19,7 +19,7 @@
 #define  kd8_l    x16
 #define  temp1    w17
 #define  temp2    w18
-#define  kd8      x19
+#define  k_temp   x19
 
 .text
 .align 5
@@ -40,16 +40,17 @@ lsr md4, m, 2
 // divide width into 8x + 4y + 2z + 1w, xyzw is natural number.
 lsr kd8_ori, k, 3
 lsl kd, kd8_ori, 3
-subs k, k, kd
-mov kd8_l, k
+mov k_temp, k
+subs k_temp, k_temp, kd
+mov kd8_l, k_temp
 
-lsr kd4_ori, k, 2
+lsr kd4_ori, k_temp, 2
 lsl kd, kd4_ori, 2
-subs k, k, kd
-lsr kd2_ori, k, 1
+subs k_temp, k_temp, kd
+lsr kd2_ori, k_temp, 1
 lsl kd, kd2_ori, 1
-subs k, k, kd
-mov kd1_ori, k
+subs k_temp, k_temp, kd
+mov kd1_ori, k_temp
 
 mov ptr_dst, x1
 mov ptr0_0, ptr_src
@@ -65,14 +66,14 @@ loopmd4:
     cmp kd8_ori, 0
     beq loopmd4_kd4
 
-	mov kd8, kd8_ori
+	mov kd, kd8_ori
     loopmd4_kd8:
         ld1 {v0.8b}, [ptr0_0], #8
         ld1 {v1.8b}, [ptr0_1], #8
         ld1 {v2.8b}, [ptr0_2], #8
         ld1 {v3.8b}, [ptr0_3], #8
         st1 {v0.8b, v1.8b, v2.8b, v3.8b}, [ptr_dst], #32
-        subs kd8, kd8, #1
+        subs kd, kd, #1
         bne loopmd4_kd8
     
     loopmd4_kd4:
@@ -143,13 +144,13 @@ loopmd2_start:
     mov ml, ml_temp
     cmp kd8_ori, 0
     beq loopmd2_kd4
-    mov kd8, kd8_ori
 
+    mov kd, kd8_ori
     loopmd2_kd8:
 	    ld1 {v0.8b}, [ptr0_0], #8
 	    ld1 {v1.8b}, [ptr0_1], #8
 	    st1 {v0.8b, v1.8b}, [ptr_dst], #16
-	    subs kd8, kd8, #1
+	    subs kd, kd, #1
 	    bne loopmd2_kd8
 
     loopmd2_kd4:
@@ -195,12 +196,12 @@ loopmd2_start:
 loopmd1_start:
     cmp kd8_ori, 0
     beq loopmd1_kd1
-    mov kd8, kd8_ori
 
+    mov kd, kd8_ori
     loopmd1_kd8:
 	    ld1 {v0.8b}, [ptr0_0], #8
 	    st1 {v0.8b}, [ptr_dst], #8
-	    subs kd8, kd8, #1
+	    subs kd, kd, #1
 	    bne loopmd1_kd8
 
     // left data size <= 7, copy it.

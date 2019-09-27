@@ -14,6 +14,12 @@
 #define kd4_ori     x16
 #define kd2_ori     x17
 #define kd1_ori     x18
+#define kd          x19
+
+#define nd4_ori     x20
+#define nd2_ori     x21
+#define nd1_ori     x22
+#define nd          x23
 
 .text
 .align 5
@@ -48,9 +54,9 @@ int8kernel_m4:
     lsr kd8_ori, x3, 3  // kd8_ori = x3 / 8, means loopk
     lsr x5, kd8_ori, 1
     lsl is_kd8_even, x5, 1
-    sub is_kd8_even, kd8_ori, is_kd8_even // x15 = x3 % 2
+    sub is_kd8_even, kd8_ori, is_kd8_even
     
-    lsr x5, kd8_ori, 3
+    lsl x5, kd8_ori, 3
     sub x3, x3, x5
     lsr kd4_ori, x3, 2  
     lsl x5, kd4_ori, 2
@@ -63,27 +69,42 @@ int8kernel_m4:
     mov kd1_ori, x3
 .endm
 
+.macro DECOMPOSE_N
+    // divide n into 4*nd4_ori + 2*nd2_ori + 1*nd1_ori
+    lsr nd4_ori, x4, 2 
+    lsl nd, nd4_ori, 2
+    sub x4, x4, nd
+    
+    lsr nd2_ori, x4, 1 
+    lsl nd, nd2_ori, 1
+    sub x4, x4, nd
+
+    mov nd1_ori, x4
+.endm
+
 sub sp, sp, #128
 st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
 st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
 
-lsl x8, x4, #2
+lsl x8, x4, #2  // sizeof(int32_t) = 4
 mov dst_ptr_0, dst
 add dst_ptr_1, dst_ptr_0, x8
 add dst_ptr_2, dst_ptr_1, x8
 add dst_ptr_3, dst_ptr_2, x8
 
 DECOMPOSE_K
+DECOMPOSE_N
 
 loopnd4:
     INIT
     mov src_ori, x1  // PanelA
+    mov kd, kd8_ori
     
     cmp is_kd8_even, 0 
     beq loopkd8_nd4_even // loop number is even 
 
     // start loopkd8_nd4
-    subs kd8_ori, kd8_ori, #1
+    subs kd, kd, #1
     ld1 {v4.8b, v5.8b, v6.8b, v7.8b}, [x2], #32 // load four lines of B
     ld1 {v2.8b, v3.8b}, [x1], #16  // load two lines of PanelA
     smull v0.8h, v4.8b, v2.8b
@@ -121,7 +142,7 @@ loopnd4:
     saddlp v19.4s, v0.8h
     saddlp v23.4s, v1.8h
 
-    cmp kd8_ori, #0
+    cmp kd, #0
     beq loopkd8_nd4_end 
 
     loopkd8_nd4_even:
@@ -199,7 +220,7 @@ loopnd4:
 
         add x1, x1, #32
         add x2, x2, #32
-        subs kd8_ori, kd8_ori, #2
+        subs kd, kd, #2
         bne loopkd8_nd4_even
 
     loopkd8_nd4_end:
@@ -232,8 +253,8 @@ loopnd4:
             mov v3.d[0], v2.d[1]
 
             smull v12.4s, v2.4h, v4.4h
-            smull v13.4s, v2.4h, v5.4h
-            smull v14.4s, v2.4h, v6.4h
+            smull v13.4s, v2.4h, v6.4h
+            smull v14.4s, v2.4h, v5.4h
             smull v15.4s, v2.4h, v7.4h
 
             addp v12.4s, v12.4s, v13.4s
@@ -242,8 +263,8 @@ loopnd4:
             add v8.4s, v8.4s, v12.4s
 
             smull v16.4s, v3.4h, v4.4h
-            smull v17.4s, v3.4h, v5.4h
-            smull v18.4s, v3.4h, v6.4h
+            smull v17.4s, v3.4h, v6.4h
+            smull v18.4s, v3.4h, v5.4h
             smull v19.4s, v3.4h, v7.4h
 
             addp v16.4s, v16.4s, v17.4s
@@ -251,13 +272,13 @@ loopnd4:
             addp v16.4s, v16.4s, v18.4s
             add v9.4s, v9.4s, v16.4s
 
-            ld1 {v2.8b}, [x1], #8 // loadd A2x4
+            ld1 {v2.8b}, [x1], #8 // load next A2x4
             sxtl v2.8h, v2.8b
             mov v3.d[0], v2.d[1]
 
             smull v12.4s, v2.4h, v4.4h
-            smull v13.4s, v2.4h, v5.4h
-            smull v14.4s, v2.4h, v6.4h
+            smull v13.4s, v2.4h, v6.4h
+            smull v14.4s, v2.4h, v5.4h
             smull v15.4s, v2.4h, v7.4h
 
             addp v12.4s, v12.4s, v13.4s
@@ -266,8 +287,8 @@ loopnd4:
             add v10.4s, v10.4s, v12.4s
 
             smull v16.4s, v3.4h, v4.4h
-            smull v17.4s, v3.4h, v5.4h
-            smull v18.4s, v3.4h, v6.4h
+            smull v17.4s, v3.4h, v6.4h
+            smull v18.4s, v3.4h, v5.4h
             smull v19.4s, v3.4h, v7.4h
 
             addp v16.4s, v16.4s, v17.4s
@@ -279,22 +300,22 @@ loopnd4:
             cmp kd2_ori, 0
             beq loopkd1_nd4 
             // start subkernel_m4n4k2
-            ld1 {v4.8b}, [x2], #8
-            ld1 {v0.8b}, [x1], #8   // input
-
-            rev32 v1.4h, v0.4h
-            rev64 v2.2s, v0.2s
-            rev64 v3.4h, v0.4h
+            ld1 {v4.8b}, [x1], #8   // load A4x2
+            ld1 {v0.8b}, [x2], #8   // load B2x4 
+                                // 00 11 22 33
+            rev32 v1.4h, v0.4h  // 11 00 33 22
+            rev64 v2.2s, v0.2s  // 22 33 00 11
+            rev64 v3.4h, v0.4h  // 33 22 11 00
 
             smull v12.8h, v4.8b, v0.8b
             smull v13.8h, v4.8b, v1.8b
             smull v14.8h, v4.8b, v2.8b
             smull v15.8h, v4.8b, v3.8b
 
-            sadalp v12.4s, v12.8h
-            sadalp v13.4s, v13.8h
-            sadalp v14.4s, v14.8h
-            sadalp v15.4s, v15.8h
+            saddlp v12.4s, v12.8h
+            saddlp v13.4s, v13.8h
+            saddlp v14.4s, v14.8h
+            saddlp v15.4s, v15.8h
 
             mov v16.s[0], v12.s[0]
             mov v16.s[1], v13.s[0]
@@ -342,7 +363,7 @@ loopnd4:
         st1 {v10.4s}, [dst_ptr_2], #16
         st1 {v11.4s}, [dst_ptr_3], #16
 
-        subs x4, x4, #1
+        subs nd4_ori, nd4_ori, #1
         mov x1, src_ori 
         bne loopnd4 
 
