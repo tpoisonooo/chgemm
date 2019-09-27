@@ -251,7 +251,7 @@ loopnd4:
             addp v16.4s, v16.4s, v18.4s
             add v9.4s, v9.4s, v16.4s
 
-            ld {v2.8b}, [x1], #8 // loadd A2x4
+            ld1 {v2.8b}, [x1], #8 // loadd A2x4
             sxtl v2.8h, v2.8b
             mov v3.d[0], v2.d[1]
 
@@ -278,14 +278,57 @@ loopnd4:
         loopkd2_nd4:
             cmp kd2_ori, 0
             beq loopkd1_nd4 
-            // start subkernel_m4n4k2, TODO butterfly
+            // start subkernel_m4n4k2
+            ld1 {v4.8b}, [x2], #8
+            ld1 {v0.8b}, [x1], #8   // input
+
+            rev32 v1.4h, v0.4h
+            rev64 v2.2s, v0.2s
+            rev64 v3.4h, v0.4h
+
+            smull v12.8h, v4.8b, v0.8b
+            smull v13.8h, v4.8b, v1.8b
+            smull v14.8h, v4.8b, v2.8b
+            smull v15.8h, v4.8b, v3.8b
+
+            sadalp v12.4s, v12.8h
+            sadalp v13.4s, v13.8h
+            sadalp v14.4s, v14.8h
+            sadalp v15.4s, v15.8h
+
+            mov v16.s[0], v12.s[0]
+            mov v16.s[1], v13.s[0]
+            mov v16.s[2], v14.s[0]
+            mov v16.s[3], v15.s[0]
+
+            mov v17.s[0], v13.s[1]
+            mov v17.s[1], v12.s[1]
+            mov v17.s[2], v15.s[1]
+            mov v17.s[3], v14.s[1]
+            
+            mov v18.s[0], v14.s[2]
+            mov v18.s[1], v15.s[2]
+            mov v18.s[2], v12.s[2]
+            mov v18.s[3], v13.s[2]
+
+            mov v19.s[0], v15.s[3]
+            mov v19.s[1], v14.s[3]
+            mov v19.s[2], v13.s[3]
+            mov v19.s[3], v12.s[3]
+
+            add v8.4s, v8.4s, v16.4s
+            add v9.4s, v9.4s, v17.4s
+            add v10.4s, v10.4s, v18.4s
+            add v11.4s, v11.4s, v19.4s
 
         loopkd1_nd4:
             cmp kd1_ori, 0 
             beq loopnd4_end
             // start subkernel_m4n4k1
-            ld1 {v4.8b}, [x2], #4   // load B1x4
-            ld1 {v2.8b}, [x1], #4   // load A4x1
+            ld1 {v4.8b}, [x2]   // load B1x4
+            add x2, x2, #4
+            ld1 {v2.8b}, [x1]   // load A4x1
+            add x1, x1, #4
             sxtl v4.8h, v4.8b
             sxtl v2.8h, v2.8b
             smlal v8.4s, v4.4h, v2.h[0]
@@ -301,7 +344,7 @@ loopnd4:
 
         subs x4, x4, #1
         mov x1, src_ori 
-        bne loop_nd4 
+        bne loopnd4 
 
 sub sp, sp, #128
 ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64

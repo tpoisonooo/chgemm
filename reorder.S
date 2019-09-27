@@ -19,6 +19,7 @@
 #define  kd8_l    x16
 #define  temp1    w17
 #define  temp2    w18
+#define  kd8      x19
 
 .text
 .align 5
@@ -56,7 +57,7 @@ add ptr0_1, ptr0_0, k
 add ptr0_2, ptr0_1, k
 add ptr0_3, ptr0_2, k
 subs md4, md4, #0
-beq loopmd4_ln
+beq loopmd_ln
 
 // divide height into 4x + 2y + 1z, xyz is natural number.
 loopmd4:
@@ -72,15 +73,19 @@ loopmd4:
         ld1 {v3.8b}, [ptr0_3], #8
         st1 {v0.8b, v1.8b, v2.8b, v3.8b}, [ptr_dst], #32
         subs kd8, kd8, #1
-        bne loopkd8
+        bne loopmd4_kd8
     
     loopmd4_kd4:
         cmp kd4_ori, 0
         beq loopmd4_kd2
-        ld1 {v0.8b}, [ptr0_0], #4
-        ld1 {v1.8b}, [ptr0_1], #4
-        ld1 {v2.8b}, [ptr0_2], #4
-        ld1 {v3.8b}, [ptr0_3], #4
+        ld1 {v0.8b}, [ptr0_0]
+        add ptr0_0, ptr0_0, 4
+        ld1 {v1.8b}, [ptr0_1]
+        add ptr0_1, ptr0_1, 4
+        ld1 {v2.8b}, [ptr0_2]
+        add ptr0_2, ptr0_2, 4
+        ld1 {v3.8b}, [ptr0_3]
+        add ptr0_3, ptr0_3, 4
     
         trn1 v0.2s, v0.2s, v1.2s
         st1 {v0.8b}, [ptr_dst], #8
@@ -90,10 +95,14 @@ loopmd4:
     loopmd4_kd2:
         cmp kd2_ori, 0
         beq loopmd4_kd1
-        ld1 {v0.8b}, [ptr0_0], #2
-        ld1 {v1.8b}, [ptr0_1], #2
-        ld1 {v2.8b}, [ptr0_2], #2
-        ld1 {v3.8b}, [ptr0_3], #2
+        ld1 {v0.8b}, [ptr0_0]
+        add ptr0_0, ptr0_0, #2
+        ld1 {v1.8b}, [ptr0_1]
+        add ptr0_1, ptr0_1, #2
+        ld1 {v2.8b}, [ptr0_2]
+        add ptr0_2, ptr0_2, #2
+        ld1 {v3.8b}, [ptr0_3]
+        add ptr0_3, ptr0_3, #2
     
         trn1 v0.4h, v0.4h, v1.4h
         trn1 v2.4h, v2.4h, v3.4h
@@ -147,8 +156,10 @@ loopmd2_start:
         cmp kd4_ori, 0
         beq loopmd4_kd2
     
-        ld1 {v0.8b}, [ptr0_0], #4
-        ld1 {v1.8b}, [ptr0_1], #4
+        ld1 {v0.8b}, [ptr0_0]
+        add ptr0_0, ptr0_0, #4
+        ld1 {v1.8b}, [ptr0_1]
+        add ptr0_1, ptr0_1, #4
         trn1 v0.2s, v0.2s, v1.2s
         st1 {v0.8b}, [ptr_dst], #8
     
@@ -156,10 +167,13 @@ loopmd2_start:
         cmp kd2_ori, 0
         beq loopmd2_kd1
     
-        ld1 {v0.8b}, [ptr0_0], #2
-        ld1 {v1.8b}, [ptr0_1], #2
+        ld1 {v0.8b}, [ptr0_0]
+        add ptr0_0, ptr0_0, #2
+        ld1 {v1.8b}, [ptr0_1]
+        add ptr0_1, ptr0_1, #2
         trn1 v0.4h, v0.4h, v1.4h
-        st1 {v0.8b}, [ptr_dst], #4
+        st1 {v0.8b}, [ptr_dst]
+        add ptr_dst, ptr_dst, #4
     
     loopmd2_kd1:
         cmp kd1_ori, 0
@@ -180,7 +194,7 @@ loopmd2_start:
 #    mov ml, ml_temp
 loopmd1_start:
     cmp kd8_ori, 0
-    beq loopmd1_kd4
+    beq loopmd1_kd1
     mov kd8, kd8_ori
 
     loopmd1_kd8:
@@ -190,12 +204,13 @@ loopmd1_start:
 	    bne loopmd1_kd8
 
     // left data size <= 7, copy it.
+    loopmd1_kd1:
     cmp kd8_l, 0
     beq end 
     copy_kd8_l:
         ldrb temp1, [ptr0_0], #1
         strb temp1, [ptr_dst], #1
-        subs kd8_l, 1
+        subs kd8_l, kd8_l, 1
         bne copy_kd8_l
    
 end:
