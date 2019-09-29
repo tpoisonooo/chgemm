@@ -579,13 +579,13 @@ nd2_start:
         st1 {v12.2s}, [dst_ptr_1], #8
         st1 {v16.2s}, [dst_ptr_2], #8
         st1 {v20.2s}, [dst_ptr_3], #8
+        mov x1, src_ori
 
 nd1_start:
     cmp nd1_ori, 0  // means left n == 0
     beq finish
 
     INIT
-    mov src_ori, x1  // PanelA
 
     cmp kd8_ori, #0
     beq loopkd4_nd1 // k <= 7
@@ -593,7 +593,7 @@ nd1_start:
     mov kd, kd8_ori
     
     cmp is_kd8_even, 0 
-    beq loopkd8_nd2_even // loop number is even 
+    beq loopkd8_nd1_even // loop number is even 
 
     // start loopkd8_nd1
     subs kd, kd, #1
@@ -689,27 +689,20 @@ nd1_start:
         ld1 {v4.8b}, [x1], #8   // load A4x2
         ld1 {v0.8b}, [x2]   // load B2x1
         add x2, x2, #2
-                            // 00
-        rev32 v1.4h, v0.4h  //    00
-        rev64 v2.2s, v0.2s  //       00 
-        rev64 v3.4h, v0.4h  //          00
 
-        smull v21.8h, v4.8b, v0.8b
-        smull v22.8h, v4.8b, v1.8b
-        smull v23.8h, v4.8b, v2.8b
-        smull v24.8h, v4.8b, v3.8b
+        mov v0.h[1], v0.h[0]
+        mov v0.s[1], v0.s[0]
 
-        saddlp v21.4s, v21.8h
-        saddlp v22.4s, v22.8h
-        saddlp v23.4s, v23.8h
-        saddlp v24.4s, v24.8h
-
-        add v8.4s, v8.4s, v21.4s
-        mov v13.s[0], v22.s[1]
+        smull v0.8h, v0.8b, v4.8b
+        saddlp v0.4s, v0.8h
+        
+        mov v9.s[0], v0.s[0]
+        add v8.4s, v8.4s, v9.4s
+        mov v13.s[0], v0.s[1]
         add v12.4s, v12.4s, v13.4s
-        mov v17.s[0], v23.s[1]
+        mov v17.s[0], v0.s[2]
         add v16.4s, v16.4s, v17.4s
-        mov v21.s[0], v24.s[3]
+        mov v21.s[0], v0.s[3]
         add v20.4s, v20.4s, v21.4s
 
     loopkd1_nd1:
