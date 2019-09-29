@@ -10,7 +10,6 @@
 #define  ptr0_3   x7
 #define  md4      x8
 #define  ml       x9
-#define  ml_temp  x10
 #define  kd       x11
 #define  kd8_ori  x12
 #define  kd4_ori  x13
@@ -134,14 +133,13 @@ loopmd4:
 loopmd_ln:
     cmp ml, #0
     beq end
-    subs ml_temp, ml, #1
-    beq loopmd1_start
-    subs ml_temp, ml, #2
-    bgt loopmd2_start
+    cmp ml, #2
+    bge loopmd2_start
+    b loopmd1_start
 
 loopmd2_start:
 // proc left two lines.
-    mov ml, ml_temp
+    sub ml, ml, #2
     cmp kd8_ori, 0
     beq loopmd2_kd4
 
@@ -155,7 +153,7 @@ loopmd2_start:
 
     loopmd2_kd4:
         cmp kd4_ori, 0
-        beq loopmd4_kd2
+        beq loopmd2_kd2
     
         ld1 {v0.8b}, [ptr0_0]
         add ptr0_0, ptr0_0, #4
@@ -192,8 +190,8 @@ loopmd2_start:
         b loopmd_ln
 
 // proc the last line
-#    mov ml, ml_temp
 loopmd1_start:
+    sub ml, ml, #1
     cmp kd8_ori, 0
     beq loopmd1_kd1
 
