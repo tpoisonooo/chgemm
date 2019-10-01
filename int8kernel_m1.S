@@ -128,7 +128,6 @@ loopnd4:
         smlal v1.8h, v3.8b, v15.8b
         sadalp v11.4s, v1.8h
 
-        add x2, x2, #32
         subs kd, kd, #2
         bne loopkd8_nd4_even
 
@@ -266,7 +265,7 @@ nd2_start:
         beq loopkd1_nd2 
         // start subkernel_m1n2k2
         ld1 {v4.8b}, [x1]   // load A1x2
-        add x1, x1, #1
+        add x1, x1, #2
         ld1 {v0.8b}, [x2]   // load B2x2
         add x2, x2, #4
 
