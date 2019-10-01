@@ -7,8 +7,8 @@ NEW  := MMult_4x8_21
 
 CC         := gcc
 LINKER     := $(CC)
-#CFLAGS     := -O0 -g -Wall -pg
-CFLAGS     := -O3 -g -Wall 
+#CFLAGS     := -O0 -g -Wall
+CFLAGS     := -O0 -g -Wall 
 #LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
@@ -18,10 +18,10 @@ UTIL       := copy_matrix.o \
               REF_MMult.o \
               print_matrix.o \
               kernel_m4n4k16.o \
-              test.o \
-              int8gemm.o \
               reorder.o \
-              int8kernel.o \
+              int8kernel_m4.o \
+              int8kernel_m2.o \
+              int8kernel_m1.o
 
 TEST_OBJS  := test_MMult.o $(NEW).o 
 
@@ -48,7 +48,7 @@ run:
 	cp output_$(NEW).m output_new.m
 
 clean:
-	rm -f *.o *~ core *.x
+	rm -f *.o *~ core *.x *.m
 
 cleanall:
 	rm -f *.o *~ core *.x output*.m *.eps *.png

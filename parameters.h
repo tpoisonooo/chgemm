@@ -2,16 +2,16 @@
 In the test driver, there is a loop "for ( p=PFIRST; p<= PLAST; p+= PINC )"
 The below parameters set this range of values that p takes on 
 */   
-#define PFIRST 800
-#define PLAST  800 
-#define PINC   10
+#define PFIRST 1000
+#define PLAST  1000 
+#define PINC   1000
 
 /* 
 In the test driver, each experiment is repeated NREPEATS times and
 the best time from these repeats is used to compute the performance
 */
 
-#define NREPEATS 40
+#define NREPEATS 10
 
 /* 
 Matrices A, B, and C are stored in two dimensional arrays with

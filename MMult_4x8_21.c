@@ -36,7 +36,9 @@ void print_int8_matrix( int m, int n, int8_t *a, int lda);
 void print_int32_matrix( int m, int n, int32_t *a, int lda);
 /* Routine for computing C = A * B + C */
 
-extern void int8kernel(int32_t* dst, const int8_t* src, const int8_t* weight, size_t src_depth_quad, size_t dst_depth_quad);
+extern void int8kernel_m4(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
+extern void int8kernel_m2(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
+extern void int8kernel_m1(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
 extern void reorder(int8_t * src, int8_t * dst, size_t m, size_t k);
 
 static inline void trans(int8_t * matrixB, int8_t * matrixB_trans, int k , int n){
@@ -74,9 +76,9 @@ static inline int8_t* fastMalloc(int size){
 }
 
 /* Suppose that m%4==0 and n%4==0 and k%4==0, avoiding process boundary !! */
-void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
-                                   int8_t * restrict b, int ldb,
-                                   int32_t * restrict c, int ldc,
+void MY_MMult(int m, int n, int k, int8_t * a, int lda,
+                                   int8_t * b, int ldb,
+                                   int32_t * c, int ldc,
                                    double *packZ_cost,
                                    double *packN_cost,
                                    double *kernel_cost)
@@ -90,17 +92,47 @@ void MY_MMult(int m, int n, int k, int8_t * restrict a, int lda,
     printf("\n-------\n");
 #endif
 
-    int8_t* restrict sa = fastMalloc(m * k);
-    int8_t* restrict sb = fastMalloc(k * n);
-    double temp;
+    int8_t* sa = fastMalloc(m * k);
+    int8_t* sb = fastMalloc(k * n);
     // packA
     reorder(a, sa, m, k);
     // packB
     trans_w(b, sb, k, n);
     // subkernel 
-    for(int i = 0; i < m / 4; i++){
-    	int8kernel(c + i * 4 * n, sa + i * 4 * k, sb, k/8, n/4);
+    int8_t *pA= sa, *pB = sb;
+    int32_t *pC = c;
+    int i = 0;
+    while (i+4 <= m) {
+	    int8kernel_m4(pC, pA, pB, k, n);
+        pC += 4 * n;
+        pA += 4 * k;
+        i += 4;
     }
+    switch(m-i) {
+        case 3:
+	        int8kernel_m2(pC, pA, pB, k, n);
+            pC += 2 * n;
+            pA += 2 * k;
+	        int8kernel_m1(pC, pA, pB, k, n);
+            pC += n;
+            pA += k;
+            break;
+        case 2:
+	        int8kernel_m2(pC, pA, pB, k, n);
+            pC += 2 * n;
+            pA += 2 * k;
+            break;
+        case 1:
+	        int8kernel_m1(pC, pA, pB, k, n);
+            pC += n;
+            pA += k;
+            break;
+        case 0:
+        default:
+            break;
+    }
+    
+
     // print_int32_matrix(m, n, c, ldc);
 
     free(sa);
