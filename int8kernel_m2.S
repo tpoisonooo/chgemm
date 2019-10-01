@@ -5,8 +5,6 @@
 #define kd8_ori     x7
 #define dst_ptr_0   x9
 #define dst_ptr_1   x10
-#define dst_ptr_2   x11
-#define dst_ptr_3   x12
 #define tmp_ptr_b   x14
 
 #define is_kd8_even x15
@@ -29,7 +27,7 @@
 .global int8kernel_m2
 
 int8kernel_m2:
-//void int8kernel_m4(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t k, size_t n);
+//void int8kernel_m2(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t k, size_t n);
 //x0: dst, x1: src, x2:weight, x3: k, x4: n
 
 .macro INIT
@@ -92,8 +90,6 @@ st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
 lsl x8, x4, #2  // sizeof(int32_t) = 4
 mov dst_ptr_0, dst
 add dst_ptr_1, dst_ptr_0, x8
-add dst_ptr_2, dst_ptr_1, x8
-add dst_ptr_3, dst_ptr_2, x8
 
 DECOMPOSE_K
 DECOMPOSE_N
@@ -118,7 +114,6 @@ loopnd4:
     ld1 {v2.8b, v3.8b}, [x1], #16  // load two lines of PanelA
     smull v0.8h, v4.8b, v2.8b
     smull v1.8h, v4.8b, v3.8b
-
     saddlp v8.4s, v0.8h
     saddlp v12.4s, v1.8h
     smull v0.8h, v5.8b, v2.8b
@@ -132,7 +127,7 @@ loopnd4:
     smull v0.8h, v7.8b, v2.8b
     smull v1.8h, v7.8b, v3.8b
     saddlp v11.4s, v0.8h
-    saddlp v23.4s, v1.8h
+    saddlp v15.4s, v1.8h
 
     cmp kd, #0
     beq loopkd8_nd4_end 
@@ -196,7 +191,7 @@ loopnd4:
     loopkd4_nd4:
         cmp kd4_ori, 0
         beq loopkd2_nd4 
-        // start subkernel_m4n4k4
+        // start subkernel_m2n4k4
         ld1 {v4.8b, v5.8b}, [x2], #16  // load B4x4
         sxtl v4.8h, v4.8b
         sxtl v5.8h, v5.8b
@@ -230,7 +225,7 @@ loopnd4:
     loopkd2_nd4:
         cmp kd2_ori, 0
         beq loopkd1_nd4 
-        // start subkernel_m4n4k2
+        // start subkernel_m2n4k2
         ld1 {v4.8b}, [x1]       // load A2x2
         add x1, x1, #4
         ld1 {v0.8b}, [x2], #8   // load B2x4 
@@ -265,7 +260,7 @@ loopnd4:
     loopkd1_nd4:
         cmp kd1_ori, 0 
         beq loopnd4_end
-        // start subkernel_m4n4k1
+        // start subkernel_m2n4k1
         ld1 {v4.8b}, [x2]   // load B1x4
         add x2, x2, #4
         ld1 {v2.8b}, [x1]   // load A2x1
@@ -351,7 +346,7 @@ nd2_start:
     loopkd4_nd2:
         cmp kd4_ori, 0
         beq loopkd2_nd2 
-        // start subkernel_m4n2k4
+        // start subkernel_m2n2k4
         ld1 {v4.8b}, [x2], #8  // load B4x2
         sxtl v4.8h, v4.8b
         mov v6.d[0], v4.d[1]
@@ -468,7 +463,7 @@ nd1_start:
     loopkd4_nd1: 
         cmp kd4_ori, 0
         beq loopkd2_nd1 
-        // start subkernel_m4n1k2
+        // start subkernel_m2n1k2
         ld1 {v4.8b}, [x2]  // load B4x1
         add x2, x2, #4
         sxtl v4.8h, v4.8b   // extend B4x1 to v4
@@ -490,7 +485,7 @@ nd1_start:
     loopkd2_nd1:
         cmp kd2_ori, 0
         beq loopkd1_nd1
-        // start subkernel_m4n1k2
+        // start subkernel_m2n1k2
         ld1 {v4.8b}, [x1]   // load A2x2
         add x1, x1, #4
         ld1 {v0.8b}, [x2]   // load B2x1
