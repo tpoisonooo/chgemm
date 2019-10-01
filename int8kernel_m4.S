@@ -32,23 +32,23 @@ int8kernel_m4:
 //x0: dst, x1: src, x2:weight, x3: k, x4: n
 
 .macro INIT
-    eor v8.8b, v8.8b, v8.8b
-    eor v9.8b, v9.8b, v9.8b
-    eor v10.8b, v10.8b, v10.8b
-    eor v11.8b, v11.8b, v11.8b
-    eor v12.8b, v12.8b, v12.8b
-    eor v13.8b, v13.8b, v13.8b
-    eor v14.8b, v14.8b, v14.8b
-    eor v15.8b, v15.8b, v15.8b
+    eor v8.16b, v8.16b, v8.16b
+    eor v9.16b, v9.16b, v9.16b
+    eor v10.16b, v10.16b, v10.16b
+    eor v11.16b, v11.16b, v11.16b
+    eor v12.16b, v12.16b, v12.16b
+    eor v13.16b, v13.16b, v13.16b
+    eor v14.16b, v14.16b, v14.16b
+    eor v15.16b, v15.16b, v15.16b
 
-    eor v16.8b, v16.8b, v16.8b
-    eor v17.8b, v17.8b, v17.8b
-    eor v18.8b, v18.8b, v18.8b
-    eor v19.8b, v19.8b, v19.8b
-    eor v20.8b, v20.8b, v20.8b
-    eor v21.8b, v21.8b, v21.8b
-    eor v22.8b, v22.8b, v22.8b
-    eor v23.8b, v23.8b, v23.8b
+    eor v16.16b, v16.16b, v16.16b
+    eor v17.16b, v17.16b, v17.16b
+    eor v18.16b, v18.16b, v18.16b
+    eor v19.16b, v19.16b, v19.16b
+    eor v20.16b, v20.16b, v20.16b
+    eor v21.16b, v21.16b, v21.16b
+    eor v22.16b, v22.16b, v22.16b
+    eor v23.16b, v23.16b, v23.16b
 .endm
 
 .macro DECOMPOSE_K

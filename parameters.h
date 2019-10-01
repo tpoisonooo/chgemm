@@ -2,9 +2,9 @@
 In the test driver, there is a loop "for ( p=PFIRST; p<= PLAST; p+= PINC )"
 The below parameters set this range of values that p takes on 
 */   
-#define PFIRST 800
-#define PLAST  800 
-#define PINC   100
+#define PFIRST 1000
+#define PLAST  1000 
+#define PINC   1000
 
 /* 
 In the test driver, each experiment is repeated NREPEATS times and
