@@ -11,39 +11,5 @@ chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 
 ### 速度
 -O0 编译，目前结果
->
---------------------------------
-M=123 N=123 K=123 REPEAT=10
-OpenBLAS sgemm timecost:1.59057ms
-timer cost for chgemm:1.25515ms
-errors : 0
---------------------------------
-M=321 N=321 K=321 REPEAT=10
-OpenBLAS sgemm timecost:9.25144ms
-timer cost for chgemm:5.70249ms
-errors : 0
---------------------------------
-M=1321 N=1321 K=1321 REPEAT=10
-OpenBLAS sgemm timecost:406.735ms
-timer cost for chgemm:278.287ms
-errors : 0
---------------------------------
-M=121 N=1321 K=1321 REPEAT=10
-OpenBLAS sgemm timecost:41.2142ms
-timer cost for chgemm:47.8499ms
-errors : 0
---------------------------------
-M=1321 N=121 K=1321 REPEAT=10
-OpenBLAS sgemm timecost:40.6452ms
-timer cost for chgemm:26.0947ms
-errors : 0
---------------------------------
-M=1321 N=1321 K=121 REPEAT=10
-OpenBLAS sgemm timecost:43.6819ms
-timer cost for chgemm:26.4824ms
-errors : 0
---------------------------------
-M=2000 N=2000 K=2000 REPEAT=10
-OpenBLAS sgemm timecost:1329.04ms
-timer cost for chgemm:887.612ms
-errors : 0
+
+![尺寸和gflops结果](0.png)
