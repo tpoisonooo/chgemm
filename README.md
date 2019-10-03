@@ -4,7 +4,7 @@ chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm
 1. when you input an int8_t type of matrix [-127,+127], you will get an int32_t one. PS: pay attention to the overflow;
 2. considering the application scene of the deeep learning, the packAB interface is open and can be adjusted;
 3. the common design plan is `alpha*A*B+beta*C=C`, but mine is `C=A*B`, because they have no utility in deep learning inference;
-4. the speed of this project is not slower than any other projects' symmint8 gemm.
+4. the speed of this project is quicker than any other projects'.
 
 chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 
