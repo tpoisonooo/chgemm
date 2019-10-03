@@ -22,42 +22,53 @@
 
 .text
 .align 5
-
 .global reorder
+.type reorder, %function
 reorder:
 //void reorder(uint8_t* src, uint8_t* dst, size_t m, size_t k);
 //Auto: x0: src, x1: dst, x2:m, x3:k
 
-sub sp, sp, #64
-st1 {v0.4s, v1.4s, v2.4s, v3.4s}, [sp], #64
-
-lsr md4, m, 2
-lsl md4, md4, #2
-subs ml, m, md4
-lsr md4, m, 2
-
-// divide width into 8x + 4y + 2z + 1w, xyzw is natural number.
-lsr kd8_ori, k, 3
-lsl kd, kd8_ori, 3
-mov k_temp, k
-subs k_temp, k_temp, kd
-mov kd8_l, k_temp
-
-lsr kd4_ori, k_temp, 2
-lsl kd, kd4_ori, 2
-subs k_temp, k_temp, kd
-lsr kd2_ori, k_temp, 1
-lsl kd, kd2_ori, 1
-subs k_temp, k_temp, kd
-mov kd1_ori, k_temp
-
-mov ptr_dst, x1
-mov ptr0_0, ptr_src
-add ptr0_1, ptr0_0, k
-add ptr0_2, ptr0_1, k
-add ptr0_3, ptr0_2, k
-subs md4, md4, #0
-beq loopmd_ln
+    add sp, sp, #-(11 * 16)
+    stp d8, d9, [sp, #(0 * 16)]
+    stp d10, d11, [sp, #(1 * 16)]
+    stp d12, d13, [sp, #(2 * 16)]
+    stp d14, d15, [sp, #(3 * 16)]
+    stp d16, d17, [sp, #(4 * 16)]
+    stp x18, x19, [sp, #(5 * 16)]
+    stp x20, x21, [sp, #(6 * 16)]
+    stp x22, x23, [sp, #(7 * 16)]
+    stp x24, x25, [sp, #(8 * 16)]
+    stp x26, x27, [sp, #(9 * 16)]
+    str x28, [sp, #(10 * 16)]
+    
+    
+    lsr md4, m, 2
+    lsl md4, md4, #2
+    subs ml, m, md4
+    lsr md4, m, 2
+    
+    // divide width into 8x + 4y + 2z + 1w, xyzw is natural number.
+    lsr kd8_ori, k, 3
+    lsl kd, kd8_ori, 3
+    mov k_temp, k
+    subs k_temp, k_temp, kd
+    mov kd8_l, k_temp
+    
+    lsr kd4_ori, k_temp, 2
+    lsl kd, kd4_ori, 2
+    subs k_temp, k_temp, kd
+    lsr kd2_ori, k_temp, 1
+    lsl kd, kd2_ori, 1
+    subs k_temp, k_temp, kd
+    mov kd1_ori, k_temp
+    
+    mov ptr_dst, x1
+    mov ptr0_0, ptr_src
+    add ptr0_1, ptr0_0, k
+    add ptr0_2, ptr0_1, k
+    add ptr0_3, ptr0_2, k
+    subs md4, md4, #0
+    beq loopmd_ln
 
 // divide height into 4x + 2y + 1z, xyz is natural number.
 loopmd4:
@@ -213,8 +224,18 @@ loopmd1_start:
         bne copy_kd8_l
    
 end:
-    sub sp, sp, #64
-    ld1 {v0.4s, v1.4s, v2.4s, v3.4s}, [sp], #64
+    mov x0, #0              // set return value
+    ldp d8, d9, [sp, #(0 * 16)]
+    ldp d10, d11, [sp, #(1 * 16)]
+    ldp d12, d13, [sp, #(2 * 16)]
+    ldp d14, d15, [sp, #(3 * 16)]
+    ldp d16, d17, [sp, #(4 * 16)]
+    ldp x18, x19, [sp, #(5 * 16)]
+    ldp x20, x21, [sp, #(6 * 16)]
+    ldp x22, x23, [sp, #(7 * 16)]
+    ldp x24, x25, [sp, #(8 * 16)]
+    ldp x26, x27, [sp, #(9 * 16)]
+    ldr x28, [sp, #(10 * 16)]
+    add sp, sp, #(11*16)
     ret
-
 #endif
