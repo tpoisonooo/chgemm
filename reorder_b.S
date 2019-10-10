@@ -354,25 +354,18 @@ loopnd2_start:
         ld1 {v6.8b}, [ptr0_6], step 
         ld1 {v7.8b}, [ptr0_7], step 
          
-        trn1 v8.8b, v0.8b, v1.8b
-        trn2 v9.8b, v0.8b, v1.8b
-        trn1 v10.8b, v2.8b, v3.8b
-        trn2 v11.8b, v2.8b, v3.8b
+        mov v0.h[1], v2.h[0]
+        mov v0.h[2], v4.h[0]
+        mov v0.h[3], v6.h[0]
 
-        trn1 v12.8b, v4.8b, v5.8b
-        trn2 v13.8b, v4.8b, v5.8b
-        trn1 v14.8b, v6.8b, v7.8b
-        trn2 v15.8b, v6.8b, v7.8b
+        mov v1.h[1], v3.h[0]
+        mov v1.h[2], v5.h[0]
+        mov v1.h[3], v7.h[0]
 
-        trn1 v8.4h, v8.4h, v10.4h
-        trn1 v12.4h, v12.4h, v14.4h
-        trn1 v0.2s, v8.2s, v12.2s 
+        trn1 v2.8b, v0.8b, v1.8b
+        trn2 v3.8b, v0.8b, v1.8b
 
-        trn1 v9.4h, v9.4h, v11.4h
-        trn1 v13.4h, v13.4h, v15.4h
-        trn1 v1.2s, v9.2s, v13.2s
-
-        st2 {v0.8b, v1.8b}, [ptr_dst0], #16
+        st1 {v2.8b, v3.8b}, [ptr_dst0], #16
 
         subs kd, kd, #1
         bne loopnd2_kd8
@@ -391,7 +384,7 @@ loopnd2_start:
         mov v1.h[1], v3.h[0]
 
         trn1 v2.8b, v0.8b, v1.8b
-        trn1 v3.8b, v0.8b, v1.8b
+        trn2 v3.8b, v0.8b, v1.8b
         mov v2.s[1], v3.s[0]
 
         st1 {v2.8b}, [ptr_dst0], #8
