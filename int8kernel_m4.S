@@ -262,8 +262,8 @@ loopnd4:
         // start subkernel_m4n4k4
         ld1 {v4.8b, v5.8b}, [x2], #16  // load B4x4
         sxtl v4.8h, v4.8b
-        sxtl v5.8h, v5.8b
         mov v6.d[0], v4.d[1]
+        sxtl v5.8h, v5.8b
         mov v7.d[0], v5.d[1]
 
         ld1 {v2.8b}, [x1], #8  // load A2x4
@@ -273,19 +273,20 @@ loopnd4:
         smull v12.4s, v2.4h, v4.4h
         smull v13.4s, v2.4h, v6.4h
         smull v14.4s, v2.4h, v5.4h
+        addp v12.4s, v12.4s, v13.4s
         smull v15.4s, v2.4h, v7.4h
 
-        addp v12.4s, v12.4s, v13.4s
         addp v14.4s, v14.4s, v15.4s
         addp v12.4s, v12.4s, v14.4s
-        add v8.4s, v8.4s, v12.4s
 
         smull v16.4s, v3.4h, v4.4h
+        add v8.4s, v8.4s, v12.4s
+
         smull v17.4s, v3.4h, v6.4h
         smull v18.4s, v3.4h, v5.4h
+        addp v16.4s, v16.4s, v17.4s
         smull v19.4s, v3.4h, v7.4h
 
-        addp v16.4s, v16.4s, v17.4s
         addp v18.4s, v18.4s, v19.4s
         addp v16.4s, v16.4s, v18.4s
         add v9.4s, v9.4s, v16.4s
@@ -297,19 +298,19 @@ loopnd4:
         smull v12.4s, v2.4h, v4.4h
         smull v13.4s, v2.4h, v6.4h
         smull v14.4s, v2.4h, v5.4h
+        addp v12.4s, v12.4s, v13.4s
         smull v15.4s, v2.4h, v7.4h
 
-        addp v12.4s, v12.4s, v13.4s
         addp v14.4s, v14.4s, v15.4s
         addp v12.4s, v12.4s, v14.4s
+        smull v16.4s, v3.4h, v4.4h
         add v10.4s, v10.4s, v12.4s
 
-        smull v16.4s, v3.4h, v4.4h
         smull v17.4s, v3.4h, v6.4h
         smull v18.4s, v3.4h, v5.4h
+        addp v16.4s, v16.4s, v17.4s
         smull v19.4s, v3.4h, v7.4h
 
-        addp v16.4s, v16.4s, v17.4s
         addp v18.4s, v18.4s, v19.4s
         addp v16.4s, v16.4s, v18.4s
         add v11.4s, v11.4s, v16.4s
@@ -318,20 +319,19 @@ loopnd4:
         cmp kd2_ori, 0
         beq loopkd1_nd4 
         // start subkernel_m4n4k2
-        ld1 {v4.8b}, [x1], #8   // load A4x2
         ld1 {v0.8b}, [x2], #8   // load B2x4 
                             // 00 11 22 33
         rev32 v1.4h, v0.4h  // 11 00 33 22
         rev64 v2.2s, v0.2s  // 22 33 00 11
+        ld1 {v4.8b}, [x1], #8   // load A4x2
         rev64 v3.4h, v0.4h  // 33 22 11 00
 
         smull v12.8h, v4.8b, v0.8b
         smull v13.8h, v4.8b, v1.8b
-        smull v14.8h, v4.8b, v2.8b
-        smull v15.8h, v4.8b, v3.8b
-
         saddlp v12.4s, v12.8h
+        smull v14.8h, v4.8b, v2.8b
         saddlp v13.4s, v13.8h
+        smull v15.8h, v4.8b, v3.8b
         saddlp v14.4s, v14.8h
         saddlp v15.4s, v15.8h
 
