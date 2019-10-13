@@ -5,10 +5,10 @@ NEW  := MMult_4x8_21
 # sample makefile
 #
 
-CC         := gcc
+CC         := gcc 
 LINKER     := $(CC)
 #CFLAGS     := -O0 -g -Wall
-CFLAGS     := -O0 -g -Wall 
+CFLAGS     := -O3 -g -Wall 
 #LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
@@ -18,7 +18,8 @@ UTIL       := copy_matrix.o \
               REF_MMult.o \
               print_matrix.o \
               kernel_m4n4k16.o \
-              reorder.o \
+              reorder_a.o \
+              reorder_b.o \
               int8kernel_m4.o \
               int8kernel_m2.o \
               int8kernel_m1.o

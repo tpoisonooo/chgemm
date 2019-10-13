@@ -22,11 +22,10 @@
 
 .text
 .align 5
-.global reorder
-.type reorder, %function
-reorder:
-//void reorder(uint8_t* src, uint8_t* dst, size_t m, size_t k);
-//Auto: x0: src, x1: dst, x2:m, x3:k
+.global reorder_a
+.type reorder_a, %function
+reorder_a:
+//void reorder_a(int8_t* src, int8_t* dst, size_t m, size_t k);
 
     add sp, sp, #-(11 * 16)
     stp d8, d9, [sp, #(0 * 16)]

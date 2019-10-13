@@ -39,7 +39,8 @@ void print_int32_matrix( int m, int n, int32_t *a, int lda);
 extern void int8kernel_m4(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
 extern void int8kernel_m2(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
 extern void int8kernel_m1(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
-extern void reorder(int8_t * src, int8_t * dst, size_t m, size_t k);
+extern void reorder_a(int8_t * src, int8_t * dst, size_t m, size_t k);
+extern void reorder_b(int8_t * src, int8_t * dst, size_t k, size_t n);
 
 static inline void trans(int8_t * matrixB, int8_t * matrixB_trans, int k , int n){
 	for(int i = 0; i < k; i++){
@@ -58,9 +59,10 @@ static inline void trans_w(int8_t * matrixB, int8_t *matrixB_reorder, int k , in
     ptr = (int8_t*)memalign(kAlignBytes, n * k * sizeof(int8_t));
 #else
 	int ret = posix_memalign(&ptr, kAlignBytes, n * k * sizeof(int8_t));
+    (void)ret;
 #endif
 	trans(matrixB, (int8_t*)ptr, k, n);
-	reorder((int8_t*)ptr, matrixB_reorder, n, k);
+	reorder_a((int8_t*)ptr, matrixB_reorder, n, k);
 #if _MSC_VER
 	_aligned_free(ptr);
 #else
@@ -95,9 +97,10 @@ void MY_MMult(int m, int n, int k, int8_t * a, int lda,
     int8_t* sa = fastMalloc(m * k);
     int8_t* sb = fastMalloc(k * n);
     // packA
-    reorder(a, sa, m, k);
+    reorder_a(a, sa, m, k);
     // packB
     trans_w(b, sb, k, n);
+    // reorder_b(b, sb, k, n);
     // subkernel 
     int8_t *pA= sa, *pB = sb;
     int32_t *pC = c;

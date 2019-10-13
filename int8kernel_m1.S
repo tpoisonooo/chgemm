@@ -18,11 +18,6 @@
 
 #define temp        x24
 
-.text
-.align 5
-.global int8kernel_m1
-
-int8kernel_m1:
 //void int8kernel_m1(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t k, size_t n);
 //x0: dst, x1: src, x2:weight, x3: k, x4: n
 
@@ -66,17 +61,32 @@ int8kernel_m1:
     mov nd1_ori, x4
 .endm
 
-sub sp, sp, #128
-st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
-st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
+.text
+.align 5
+.global int8kernel_m1
+.type int8kernel_m1, %function
+int8kernel_m1:
 
-lsl x8, x4, #2  // sizeof(int32_t) = 4
+    add sp, sp, #-(11 * 16)
+    stp d8, d9, [sp, #(0 * 16)]
+    stp d10, d11, [sp, #(1 * 16)]
+    stp d12, d13, [sp, #(2 * 16)]
+    stp d14, d15, [sp, #(3 * 16)]
+    stp d16, d17, [sp, #(4 * 16)]
+    stp x18, x19, [sp, #(5 * 16)]
+    stp x20, x21, [sp, #(6 * 16)]
+    stp x22, x23, [sp, #(7 * 16)]
+    stp x24, x25, [sp, #(8 * 16)]
+    stp x26, x27, [sp, #(9 * 16)]
+    str x28, [sp, #(10 * 16)]
 
-DECOMPOSE_K
-DECOMPOSE_N
-
-cmp nd4_ori, #0
-beq nd2_start // means n < 4 
+    lsl x8, x4, #2  // sizeof(int32_t) = 4
+    
+    DECOMPOSE_K
+    DECOMPOSE_N
+    
+    cmp nd4_ori, #0
+    beq nd2_start // means n < 4 
 loopnd4:
     INIT
     mov src_ori, x1  // PanelA
@@ -385,9 +395,18 @@ nd1_start:
         st1 {v8.s}[0], [dst]
 
 finish:
-sub sp, sp, #128
-ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
-ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
-ret
-
+    mov x0, #0              // set return value
+    ldp d8, d9, [sp, #(0 * 16)]
+    ldp d10, d11, [sp, #(1 * 16)]
+    ldp d12, d13, [sp, #(2 * 16)]
+    ldp d14, d15, [sp, #(3 * 16)]
+    ldp d16, d17, [sp, #(4 * 16)]
+    ldp x18, x19, [sp, #(5 * 16)]
+    ldp x20, x21, [sp, #(6 * 16)]
+    ldp x22, x23, [sp, #(7 * 16)]
+    ldp x24, x25, [sp, #(8 * 16)]
+    ldp x26, x27, [sp, #(9 * 16)]
+    ldr x28, [sp, #(10 * 16)]
+    add sp, sp, #(11*16)
+    ret
 #endif

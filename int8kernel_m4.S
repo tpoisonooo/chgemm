@@ -23,32 +23,27 @@
 
 #define temp        x24
 
-.text
-.align 5
-.global int8kernel_m4
-
-int8kernel_m4:
 //void int8kernel_m4(int32_t* dst, const uint8_t* src, const uint8_t* weight, size_t k, size_t n);
 //x0: dst, x1: src, x2:weight, x3: k, x4: n
 
 .macro INIT
-    eor v8.16b, v8.16b, v8.16b
-    eor v9.16b, v9.16b, v9.16b
-    eor v10.16b, v10.16b, v10.16b
-    eor v11.16b, v11.16b, v11.16b
-    eor v12.16b, v12.16b, v12.16b
-    eor v13.16b, v13.16b, v13.16b
-    eor v14.16b, v14.16b, v14.16b
-    eor v15.16b, v15.16b, v15.16b
+    eor v8.8b, v8.8b, v8.8b
+    eor v9.8b, v9.8b, v9.8b
+    eor v10.8b, v10.8b, v10.8b
+    eor v11.8b, v11.8b, v11.8b
+    eor v12.8b, v12.8b, v12.8b
+    eor v13.8b, v13.8b, v13.8b
+    eor v14.8b, v14.8b, v14.8b
+    eor v15.8b, v15.8b, v15.8b
 
-    eor v16.16b, v16.16b, v16.16b
-    eor v17.16b, v17.16b, v17.16b
-    eor v18.16b, v18.16b, v18.16b
-    eor v19.16b, v19.16b, v19.16b
-    eor v20.16b, v20.16b, v20.16b
-    eor v21.16b, v21.16b, v21.16b
-    eor v22.16b, v22.16b, v22.16b
-    eor v23.16b, v23.16b, v23.16b
+    eor v16.8b, v16.8b, v16.8b
+    eor v17.8b, v17.8b, v17.8b
+    eor v18.8b, v18.8b, v18.8b
+    eor v19.8b, v19.8b, v19.8b
+    eor v20.8b, v20.8b, v20.8b
+    eor v21.8b, v21.8b, v21.8b
+    eor v22.8b, v22.8b, v22.8b
+    eor v23.8b, v23.8b, v23.8b
 .endm
 
 .macro DECOMPOSE_K
@@ -84,21 +79,35 @@ int8kernel_m4:
     mov nd1_ori, x4
 .endm
 
-sub sp, sp, #128
-st1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
-st1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
+.text
+.align 5
+.global int8kernel_m4
+.type int8kernel_m4, %function
+int8kernel_m4:
+    add sp, sp, #-(11 * 16)
+    stp d8, d9, [sp, #(0 * 16)]
+    stp d10, d11, [sp, #(1 * 16)]
+    stp d12, d13, [sp, #(2 * 16)]
+    stp d14, d15, [sp, #(3 * 16)]
+    stp d16, d17, [sp, #(4 * 16)]
+    stp x18, x19, [sp, #(5 * 16)]
+    stp x20, x21, [sp, #(6 * 16)]
+    stp x22, x23, [sp, #(7 * 16)]
+    stp x24, x25, [sp, #(8 * 16)]
+    stp x26, x27, [sp, #(9 * 16)]
+    str x28, [sp, #(10 * 16)]
 
-lsl x8, x4, #2  // sizeof(int32_t) = 4
-mov dst_ptr_0, dst
-add dst_ptr_1, dst_ptr_0, x8
-add dst_ptr_2, dst_ptr_1, x8
-add dst_ptr_3, dst_ptr_2, x8
-
-DECOMPOSE_K
-DECOMPOSE_N
-
-cmp nd4_ori, #0
-beq nd2_start // means n < 4 
+    lsl x8, x4, #2  // sizeof(int32_t) = 4
+    mov dst_ptr_0, dst
+    add dst_ptr_1, dst_ptr_0, x8
+    add dst_ptr_2, dst_ptr_1, x8
+    add dst_ptr_3, dst_ptr_2, x8
+    
+    DECOMPOSE_K
+    DECOMPOSE_N
+    
+    cmp nd4_ori, #0
+    beq nd2_start // means n < 4 
 loopnd4:
     INIT
     mov src_ori, x1  // PanelA
@@ -253,8 +262,8 @@ loopnd4:
         // start subkernel_m4n4k4
         ld1 {v4.8b, v5.8b}, [x2], #16  // load B4x4
         sxtl v4.8h, v4.8b
-        sxtl v5.8h, v5.8b
         mov v6.d[0], v4.d[1]
+        sxtl v5.8h, v5.8b
         mov v7.d[0], v5.d[1]
 
         ld1 {v2.8b}, [x1], #8  // load A2x4
@@ -264,19 +273,20 @@ loopnd4:
         smull v12.4s, v2.4h, v4.4h
         smull v13.4s, v2.4h, v6.4h
         smull v14.4s, v2.4h, v5.4h
+        addp v12.4s, v12.4s, v13.4s
         smull v15.4s, v2.4h, v7.4h
 
-        addp v12.4s, v12.4s, v13.4s
         addp v14.4s, v14.4s, v15.4s
         addp v12.4s, v12.4s, v14.4s
-        add v8.4s, v8.4s, v12.4s
 
         smull v16.4s, v3.4h, v4.4h
+        add v8.4s, v8.4s, v12.4s
+
         smull v17.4s, v3.4h, v6.4h
         smull v18.4s, v3.4h, v5.4h
+        addp v16.4s, v16.4s, v17.4s
         smull v19.4s, v3.4h, v7.4h
 
-        addp v16.4s, v16.4s, v17.4s
         addp v18.4s, v18.4s, v19.4s
         addp v16.4s, v16.4s, v18.4s
         add v9.4s, v9.4s, v16.4s
@@ -288,19 +298,19 @@ loopnd4:
         smull v12.4s, v2.4h, v4.4h
         smull v13.4s, v2.4h, v6.4h
         smull v14.4s, v2.4h, v5.4h
+        addp v12.4s, v12.4s, v13.4s
         smull v15.4s, v2.4h, v7.4h
 
-        addp v12.4s, v12.4s, v13.4s
         addp v14.4s, v14.4s, v15.4s
         addp v12.4s, v12.4s, v14.4s
+        smull v16.4s, v3.4h, v4.4h
         add v10.4s, v10.4s, v12.4s
 
-        smull v16.4s, v3.4h, v4.4h
         smull v17.4s, v3.4h, v6.4h
         smull v18.4s, v3.4h, v5.4h
+        addp v16.4s, v16.4s, v17.4s
         smull v19.4s, v3.4h, v7.4h
 
-        addp v16.4s, v16.4s, v17.4s
         addp v18.4s, v18.4s, v19.4s
         addp v16.4s, v16.4s, v18.4s
         add v11.4s, v11.4s, v16.4s
@@ -309,20 +319,19 @@ loopnd4:
         cmp kd2_ori, 0
         beq loopkd1_nd4 
         // start subkernel_m4n4k2
-        ld1 {v4.8b}, [x1], #8   // load A4x2
         ld1 {v0.8b}, [x2], #8   // load B2x4 
                             // 00 11 22 33
         rev32 v1.4h, v0.4h  // 11 00 33 22
         rev64 v2.2s, v0.2s  // 22 33 00 11
+        ld1 {v4.8b}, [x1], #8   // load A4x2
         rev64 v3.4h, v0.4h  // 33 22 11 00
 
         smull v12.8h, v4.8b, v0.8b
         smull v13.8h, v4.8b, v1.8b
-        smull v14.8h, v4.8b, v2.8b
-        smull v15.8h, v4.8b, v3.8b
-
         saddlp v12.4s, v12.8h
+        smull v14.8h, v4.8b, v2.8b
         saddlp v13.4s, v13.8h
+        smull v15.8h, v4.8b, v3.8b
         saddlp v14.4s, v14.8h
         saddlp v15.4s, v15.8h
 
@@ -737,9 +746,19 @@ nd1_start:
         st1 {v20.s}[0], [dst_ptr_3]
 
 finish:
-sub sp, sp, #128
-ld1 {v8.4s, v9.4s, v10.4s, v11.4s}, [sp], #64
-ld1 {v12.4s, v13.4s, v14.4s, v15.4s}, [sp], #64
-ret
+    mov x0, #0              // set return value
+    ldp d8, d9, [sp, #(0 * 16)]
+    ldp d10, d11, [sp, #(1 * 16)]
+    ldp d12, d13, [sp, #(2 * 16)]
+    ldp d14, d15, [sp, #(3 * 16)]
+    ldp d16, d17, [sp, #(4 * 16)]
+    ldp x18, x19, [sp, #(5 * 16)]
+    ldp x20, x21, [sp, #(6 * 16)]
+    ldp x22, x23, [sp, #(7 * 16)]
+    ldp x24, x25, [sp, #(8 * 16)]
+    ldp x26, x27, [sp, #(9 * 16)]
+    ldr x28, [sp, #(10 * 16)]
+    add sp, sp, #(11*16)
+    ret
 
 #endif
