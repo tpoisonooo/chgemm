@@ -59,6 +59,7 @@ static inline void trans_w(int8_t * matrixB, int8_t *matrixB_reorder, int k , in
     ptr = (int8_t*)memalign(kAlignBytes, n * k * sizeof(int8_t));
 #else
 	int ret = posix_memalign(&ptr, kAlignBytes, n * k * sizeof(int8_t));
+    (void)ret;
 #endif
 	trans(matrixB, (int8_t*)ptr, k, n);
 	reorder_a((int8_t*)ptr, matrixB_reorder, n, k);
