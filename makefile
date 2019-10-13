@@ -8,7 +8,7 @@ NEW  := MMult_4x8_21
 CC         := gcc 
 LINKER     := $(CC)
 #CFLAGS     := -O0 -g -Wall
-CFLAGS     := -O3 -Wall 
+CFLAGS     := -O3 -g -Wall 
 #LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \

@@ -61,7 +61,7 @@ static inline void trans_w(int8_t * matrixB, int8_t *matrixB_reorder, int k , in
 	int ret = posix_memalign(&ptr, kAlignBytes, n * k * sizeof(int8_t));
 #endif
 	trans(matrixB, (int8_t*)ptr, k, n);
-	reorder((int8_t*)ptr, matrixB_reorder, n, k);
+	reorder_a((int8_t*)ptr, matrixB_reorder, n, k);
 #if _MSC_VER
 	_aligned_free(ptr);
 #else
@@ -98,7 +98,8 @@ void MY_MMult(int m, int n, int k, int8_t * a, int lda,
     // packA
     reorder_a(a, sa, m, k);
     // packB
-    reorder_b(b, sb, k, n);
+    trans_w(b, sb, k, n);
+    // reorder_b(b, sb, k, n);
     // subkernel 
     int8_t *pA= sa, *pB = sb;
     int32_t *pC = c;
