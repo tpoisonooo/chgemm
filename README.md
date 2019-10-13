@@ -7,6 +7,8 @@ chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm
 4. row major;
 5. the speed of this project is quicker than any other projects'.
 
+### chgemm
+
 chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 
 1. 输入为 [-127, +127] 范围内的 int8_t 类型矩阵，输出为 int32_t 矩阵。需注意溢出；
@@ -22,3 +24,6 @@ Compiled on RK3399 with `-O3` flag. The current peek can be 18.6 gflops, and the
 -O3 编译，目前在 rk3399 单核结果。目前极限可以到 18.6 gflops，橙线是 rk3399 单核 fp32 极限。 
 
 ![尺寸和gflops结果](0.png)
+
+### 使用方式
+参照 MMult_4x8_21.c 调用矩阵乘法，将代码嵌入到自己的项目中。可根据推理库的实现做相应修改。
