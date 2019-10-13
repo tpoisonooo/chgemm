@@ -7,8 +7,8 @@ NEW  := MMult_4x8_21
 
 CC         := gcc
 LINKER     := $(CC)
-CFLAGS     := -O0 -g -Wall
-#CFLAGS     := -O3 -g -Wall 
+#CFLAGS     := -O0 -g -Wall
+CFLAGS     := -O0 -g -Wall 
 #LDFLAGS    := -lm
 
 UTIL       := copy_matrix.o \
@@ -48,7 +48,7 @@ run:
 	cp output_$(NEW).m output_new.m
 
 clean:
-	rm -f *.o *~ core *.x
+	rm -f *.o *~ core *.x *.m
 
 cleanall:
 	rm -f *.o *~ core *.x output*.m *.eps *.png
