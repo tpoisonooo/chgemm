@@ -4,12 +4,13 @@
 #define  ptr_dst  x1
 #define  m        x2
 #define  k        x3
-#define  ptr0_0   x4
-#define  ptr0_1   x5
-#define  ptr0_2   x6
-#define  ptr0_3   x7
-#define  md4      x8
-#define  ml       x9
+#define  lda      x4
+#define  ptr0_0   x5
+#define  ptr0_1   x6
+#define  ptr0_2   x7
+#define  ptr0_3   x8
+#define  md4      x9
+#define  ml       x10
 #define  kd       x11
 #define  kd8_ori  x12
 #define  kd4_ori  x13
@@ -25,7 +26,7 @@
 .global reorder_a
 .type reorder_a, %function
 reorder_a:
-//void reorder_a(int8_t* src, int8_t* dst, size_t m, size_t k);
+//void reorder_a(int8_t* src, int8_t* dst, size_t m, size_t k, size_t lda);
 
     add sp, sp, #-(11 * 16)
     stp d8, d9, [sp, #(0 * 16)]
@@ -63,9 +64,9 @@ reorder_a:
     
     mov ptr_dst, x1
     mov ptr0_0, ptr_src
-    add ptr0_1, ptr0_0, k
-    add ptr0_2, ptr0_1, k
-    add ptr0_3, ptr0_2, k
+    add ptr0_1, ptr0_0, lda
+    add ptr0_2, ptr0_1, lda
+    add ptr0_3, ptr0_2, lda
     subs md4, md4, #0
     beq loopmd_ln
 
