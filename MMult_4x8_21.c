@@ -36,10 +36,10 @@ void print_int8_matrix( int m, int n, int8_t *a, int lda);
 void print_int32_matrix( int m, int n, int32_t *a, int lda);
 /* Routine for computing C = A * B + C */
 
-extern void int8kernel_m4(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
-extern void int8kernel_m2(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
-extern void int8kernel_m1(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n);
-extern void reorder_a(int8_t * src, int8_t * dst, size_t m, size_t k);
+extern void int8kernel_m4(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n, size_t ldc);
+extern void int8kernel_m2(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n, size_t ldc);
+extern void int8kernel_m1(int32_t* dst, const int8_t* src, const int8_t* weight, size_t k, size_t n, size_t ldc);
+extern void reorder_a(int8_t * src, int8_t * dst, size_t m, size_t k, size_t ldx);
 extern void reorder_b(int8_t * src, int8_t * dst, size_t k, size_t n);
 
 static inline void trans(int8_t * matrixB, int8_t * matrixB_trans, int k , int n){
@@ -62,7 +62,7 @@ static inline void trans_w(int8_t * matrixB, int8_t *matrixB_reorder, int k , in
     (void)ret;
 #endif
 	trans(matrixB, (int8_t*)ptr, k, n);
-	reorder_a((int8_t*)ptr, matrixB_reorder, n, k);
+	reorder_a((int8_t*)ptr, matrixB_reorder, n, k, k);
 #if _MSC_VER
 	_aligned_free(ptr);
 #else
@@ -97,7 +97,7 @@ void MY_MMult(int m, int n, int k, int8_t * a, int lda,
     int8_t* sa = fastMalloc(m * k);
     int8_t* sb = fastMalloc(k * n);
     // packA
-    reorder_a(a, sa, m, k);
+    reorder_a(a, sa, m, k, k);
     // packB
     trans_w(b, sb, k, n);
     // reorder_b(b, sb, k, n);
@@ -106,27 +106,27 @@ void MY_MMult(int m, int n, int k, int8_t * a, int lda,
     int32_t *pC = c;
     int i = 0;
     while (i+4 <= m) {
-	    int8kernel_m4(pC, pA, pB, k, n);
+	    int8kernel_m4(pC, pA, pB, k, n, n);
         pC += 4 * n;
         pA += 4 * k;
         i += 4;
     }
     switch(m-i) {
         case 3:
-	        int8kernel_m2(pC, pA, pB, k, n);
+	        int8kernel_m2(pC, pA, pB, k, n, n);
             pC += 2 * n;
             pA += 2 * k;
-	        int8kernel_m1(pC, pA, pB, k, n);
+	        int8kernel_m1(pC, pA, pB, k, n, n);
             pC += n;
             pA += k;
             break;
         case 2:
-	        int8kernel_m2(pC, pA, pB, k, n);
+	        int8kernel_m2(pC, pA, pB, k, n, n);
             pC += 2 * n;
             pA += 2 * k;
             break;
         case 1:
-	        int8kernel_m1(pC, pA, pB, k, n);
+	        int8kernel_m1(pC, pA, pB, k, n, n);
             pC += n;
             pA += k;
             break;

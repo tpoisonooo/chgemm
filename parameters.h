@@ -2,8 +2,8 @@
 In the test driver, there is a loop "for ( p=PFIRST; p<= PLAST; p+= PINC )"
 The below parameters set this range of values that p takes on 
 */   
-#define PFIRST 1000
-#define PLAST  1100 
+#define PFIRST 100
+#define PLAST  1500
 #define PINC   100
 
 /* 
