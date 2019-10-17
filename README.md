@@ -1,6 +1,6 @@
 # chgemm
 ---
-![build](https://travis-ci.org/tpoisonooo/chgemm.svg?branch=master)
+![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg) ![build](https://travis-ci.org/tpoisonooo/chgemm.svg?branch=master)
 
 chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm:
 1. when you input an int8_t type of matrix [-127,+127], you will get an int32_t one. PS: pay attention to the overflow;
@@ -8,8 +8,6 @@ chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm
 3. the common design plan is `alpha*A*B+beta*C=C`, but mine is `C=A*B`, because they have no utility in deep learning inference;
 4. row major;
 5. the speed of this project is quicker than any other projects'.
-
-# chgemm
 
 chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 
