@@ -1,4 +1,6 @@
-### chgemm
+# chgemm
+---
+![build](https://travis-ci.org/tpoisonooo/chgemm.svg?branch=master)
 
 chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm:
 1. when you input an int8_t type of matrix [-127,+127], you will get an int32_t one. PS: pay attention to the overflow;
@@ -7,7 +9,7 @@ chgemm is an symmetric int8 project, which is slightly different from BLAS sgemm
 4. row major;
 5. the speed of this project is quicker than any other projects'.
 
-### chgemm
+# chgemm
 
 chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 
@@ -17,6 +19,7 @@ chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 4. 行主序实现，放弃远古 fortran 时代的列主序；
 5. 不低于其他项目的 symmint8 gemm 速度。
 
+---
 ### test result
 Compiled on RK3399 with `-O3` flag. The current peek can be 18.6 gflops, and the orange line is the single-core fp32 limit(14.3 gflops). 
 
@@ -25,5 +28,6 @@ Compiled on RK3399 with `-O3` flag. The current peek can be 18.6 gflops, and the
 
 ![尺寸和gflops结果](0.png)
 
+---
 ### 使用方式
 参照 MMult_4x8_21.c 调用矩阵乘法，将代码嵌入到自己的项目中。可根据推理库的实现做相应修改。
