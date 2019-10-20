@@ -98,18 +98,7 @@
 #endif
 ASM_DECLARE FUNCTION_NAME
 
-    add sp, sp, #-(11 * 16)
-    stp d8, d9, [sp, #(0 * 16)]
-    stp d10, d11, [sp, #(1 * 16)]
-    stp d12, d13, [sp, #(2 * 16)]
-    stp d14, d15, [sp, #(3 * 16)]
-    stp d16, d17, [sp, #(4 * 16)]
-    stp x18, x19, [sp, #(5 * 16)]
-    stp x20, x21, [sp, #(6 * 16)]
-    stp x22, x23, [sp, #(7 * 16)]
-    stp x24, x25, [sp, #(8 * 16)]
-    stp x26, x27, [sp, #(9 * 16)]
-    str x28, [sp, #(10 * 16)]
+    SAVE_REGS
 
 #ifndef GEMM_REQUANT    // if requant, typeof C = int8_t
     lsl ldc, ldc, #2    // else sizeof(int32_t) = 4
@@ -653,18 +642,7 @@ nd1_start:
 
 finish:
     mov x0, #0              // set return value
-    ldp d8, d9, [sp, #(0 * 16)]
-    ldp d10, d11, [sp, #(1 * 16)]
-    ldp d12, d13, [sp, #(2 * 16)]
-    ldp d14, d15, [sp, #(3 * 16)]
-    ldp d16, d17, [sp, #(4 * 16)]
-    ldp x18, x19, [sp, #(5 * 16)]
-    ldp x20, x21, [sp, #(6 * 16)]
-    ldp x22, x23, [sp, #(7 * 16)]
-    ldp x24, x25, [sp, #(8 * 16)]
-    ldp x26, x27, [sp, #(9 * 16)]
-    ldr x28, [sp, #(10 * 16)]
-    add sp, sp, #(11*16)
+    RESTORE_REGS
     ret
 #endif
 #endif
