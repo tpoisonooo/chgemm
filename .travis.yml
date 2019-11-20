@@ -1,0 +1,16 @@
+sudo: false
+
+language: c++
+
+arch:
+  - arm64
+
+os: linux
+
+compiler:
+  - gcc
+
+install: skip
+
+script:
+  - make
