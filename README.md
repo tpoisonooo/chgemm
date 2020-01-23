@@ -29,3 +29,6 @@ Compiled on RK3399 with `-O3` flag. The current peek can be 18.6 gflops, and the
 ---
 ### 使用方式
 参照 MMult_4x8_21.c 调用矩阵乘法，将代码嵌入到自己的项目中。可根据推理库的实现做相应修改。
+
+### application with chgemm inside
+chgemm is pleased to support [ncnn](https://github.com/tencent/ncnn) available, check [gemm_symm_int8.h](https://github.com/Tencent/ncnn/blob/master/src/layer/arm/gemm_symm_int8.h).
