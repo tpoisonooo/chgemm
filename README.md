@@ -22,12 +22,17 @@ chgemm 是一个 int8 gemm 工程，与 BLAS gemm 不完全相同：
 Compiled on RK3399 with `-O3` flag. The current peek can be 18.6 gflops, and the orange line is the single-core fp32 limit(14.3 gflops). 
 
 ### 速度
--O3 编译，目前在 rk3399 单核结果。目前极限可以到 18.6 gflops，橙线是 rk3399 单核 fp32 极限。 
+-O3 编译，目前在 rk3399 单核结果。目前极限可以到 18.6 gflops，橙线是 rk3399 单核 fp32 极限。 在 aws A72 单核测试约 23 gflops，是此实现方法的极限（发挥 100% 性能）。
 
 ![尺寸和gflops结果](0.png)
 
 ---
 ### 使用方式
+1. 修改`makefile`中的`OLD`和`NEW`挑选不同实现方式。首次运行需要`OLD`和`NEW`是同一个
+2. `make run` 即输出速度结果
+3. `parameters.h`可修改测试参数
+
+### 集成方式
 参照 MMult_4x8_21.c 调用矩阵乘法，将代码嵌入到自己的项目中。可根据推理库的实现做相应修改。
 
 ### application with chgemm inside
